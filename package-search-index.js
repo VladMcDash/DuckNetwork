@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html","k":"18"},{"l":"ducknetwork.domain"},{"l":"ducknetwork.exceptions"},{"l":"ducknetwork.repository"},{"l":"ducknetwork.service"},{"l":"ducknetwork.ui"},{"l":"ducknetwork.util"}];updateSearchResults();
