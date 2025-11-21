@@ -1,85 +1,139 @@
 package ducknetwork.persistence;
 
 import ducknetwork.domain.*;
+import ducknetwork.persistence.Database;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class DuckDao {
 
     public Duck save(Duck d) {
-        String sql = "INSERT INTO duck (username, email, type, speed, endurance) VALUES (?, ?, ?, ?, ?) RETURNING id";
+        if (d.getId() == null)
+            throw new RuntimeException("Duck must have user_id before saving details");
+
+        String sql = "INSERT INTO duck_details(user_id, type, speed, endurance, card_id) " +
+                "VALUES (?, ?, ?, ?, NULL)";
 
         try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
+             PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            stmt.setString(1, d.getUsername());
-            stmt.setString(2, d.getEmail());
-            stmt.setString(3, getTypeName(d));
-            stmt.setDouble(4, d.getSpeed());
-            stmt.setDouble(5, d.getEndurance());
+            ps.setLong(1, d.getId());
+            ps.setString(2, d.getType());
+            ps.setDouble(3, d.getSpeed());
+            ps.setDouble(4, d.getEndurance());
 
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) d.setId(rs.getLong("id"));
-
+            ps.executeUpdate();
             return d;
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error saving duck details", e);
+        }
+    }
+
+
+    public void delete(Long id) {
+        String sql = "DELETE FROM duck_details WHERE user_id = ?";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, id);
+            ps.executeUpdate();
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error deleting duck details", e);
+        }
+    }
+
+   public Optional<Duck> findById(Long id) {
+        String sql =
+                "SELECT u.id, u.username, u.email, u.password, " +
+                        "       d.type, d.speed, d.endurance " +
+                        "FROM users u " +
+                        "JOIN duck_details d ON d.user_id = u.id " +
+                        "WHERE u.id = ?";
+
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setLong(1, id);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return Optional.empty();
+
+                Long uid = rs.getLong("id");
+                String username = rs.getString("username");
+                String email = rs.getString("email");
+                String password = rs.getString("password");
+
+                String type = rs.getString("type");
+                double speed = rs.getDouble("speed");
+                double endurance = rs.getDouble("endurance");
+
+                Duck d = buildDuck(uid, username, email, password, speed, endurance, type);
+
+                return Optional.of(d);
+            }
+
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding duck by id", e);
         }
     }
 
     public List<Duck> findAll() {
-        List<Duck> result = new ArrayList<>();
-        String sql = "SELECT * FROM duck ORDER BY id";
+        List<Duck> list = new ArrayList<>();
+
+        String sql =
+                "SELECT u.id, u.username, u.email, u.password, " +
+                        "       d.type, d.speed, d.endurance " +
+                        "FROM users u " +
+                        "JOIN duck_details d ON d.user_id = u.id " +
+                        "ORDER BY u.id";
 
         try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                result.add(mapRow(rs));
+                Long id = rs.getLong("id");
+                String username = rs.getString("username");
+                String email = rs.getString("email");
+                String password = rs.getString("password");
+
+                String type = rs.getString("type");
+                double speed = rs.getDouble("speed");
+                double endurance = rs.getDouble("endurance");
+
+                Duck d = buildDuck(id, username, email, password, speed, endurance, type);
+
+                list.add(d);
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error reading ducks", e);
         }
 
-        return result;
+        return list;
     }
 
-    private Duck mapRow(ResultSet rs) throws SQLException {
-        long id = rs.getLong("id");
-        String username = rs.getString("username");
-        String email = rs.getString("email");
-        String type = rs.getString("type");
-        double speed = rs.getDouble("speed");
-        double endurance = rs.getDouble("endurance");
+    private Duck buildDuck(Long id, String username, String email, String password,
+                           double speed, double endurance, String type) {
 
-        return switch (type) {
-            case "SWIMMING" -> new SwimmingDuck(id, username, email," ", speed, endurance);
-            case "FLYING" -> new FlyingDuck(id, username, email, " ",speed, endurance);
-            case "FLYING_AND_SWIMMING" -> new FlyingAndSwimmingDuck(id, username, email," ", speed, endurance);
-            default -> new SwimmingDuck(id, username, email," ", speed, endurance);
-        };
-    }
+        switch (type) {
+            case "SWIMMING":
+                return new SwimmingDuck(id, username, email, password, speed, endurance);
 
-    private String getTypeName(Duck d) {
-        if (d instanceof SwimmingDuck) return "SWIMMING";
-        if (d instanceof FlyingDuck) return "FLYING";
-        if (d instanceof FlyingAndSwimmingDuck) return "FLYING_AND_SWIMMING";
-        return "SWIMMING";
-    }
-    public void delete(long id) {
-        String sql = "DELETE FROM duck WHERE id = ?";
-        try (Connection conn = Database.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setLong(1, id);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+            case "FLYING":
+                return new FlyingDuck(id, username, email, password, speed, endurance);
+
+            case "FLYING_AND_SWIMMING":
+                return new FlyingAndSwimmingDuck(id, username, email, password, speed, endurance);
+
+            default:
+                throw new RuntimeException("Unknown duck type in DB: " + type);
         }
     }
-
 }

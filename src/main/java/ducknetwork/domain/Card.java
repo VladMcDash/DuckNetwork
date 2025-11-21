@@ -11,6 +11,11 @@ public class Card {
     private final String name;
     private final List<Duck> members = new ArrayList<>();
 
+    public boolean hasDuck(Duck d) {
+        if (d == null) return false;
+        return members.contains(d);
+    }
+
     public Card(Long id, String name) {
         this.id = id;
         this.name = name;
@@ -39,6 +44,9 @@ public class Card {
         double sum = 0.0;
         for (Duck d : members) sum += (d.getSpeed() + d.getEndurance()) / 2.0;
         return sum / members.size();
+    }
+    public void setId(Long id) {
+        throw new UnsupportedOperationException("ID is immutable");
     }
 
     @Override

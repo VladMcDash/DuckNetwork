@@ -1,15 +1,13 @@
 package ducknetwork.service;
 
 import ducknetwork.domain.*;
-import ducknetwork.exceptions.DomainExceptions;
 import ducknetwork.repository.Repo;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Service layer for DuckSocialNetwork.
- * Business logic: communities, most sociable, plus card & event orchestration.
+ * Service layer
  */
 public class NetworkService {
 
@@ -26,43 +24,66 @@ public class NetworkService {
         repo.removeFriend(id1, id2);
     }
 
-
     public int numberOfCommunities() {
         return getCommunities().size();
     }
 
+    /**
+     * Compute connected components of the friendship graph.
+     */
     public List<List<User>> getCommunities() {
-        List<User> all = repo.listAllUsers();
-        Map<Long, User> map = all.stream().collect(Collectors.toMap(User::getId, u -> u));
+        List<User> allUsers = repo.listAllUsers();
+        Map<Long, User> byId = allUsers.stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+
         Set<Long> visited = new HashSet<>();
-        List<List<User>> comps = new ArrayList<>();
-        for (User u : all) {
-            if (!visited.contains(u.getId())) {
-                List<User> comp = new ArrayList<>();
-                Queue<Long> q = new LinkedList<>();
-                q.add(u.getId()); visited.add(u.getId());
-                while (!q.isEmpty()) {
-                    Long cur = q.poll();
-                    User usr = map.get(cur);
-                    if (usr == null) continue;
-                    comp.add(usr);
-                    for (User f : usr.getFriends()) {
-                        if (!visited.contains(f.getId())) {
-                            visited.add(f.getId());
-                            q.add(f.getId());
-                        }
-                    }
-                }
-                comps.add(comp);
+        List<List<User>> components = new ArrayList<>();
+
+        for (User u : allUsers) {
+            long uid = u.getId();
+            if (!visited.contains(uid)) {
+                components.add(bfsCollectComponent(uid, visited, byId));
             }
         }
-        return comps;
+
+        return components;
+    }
+
+    private List<User> bfsCollectComponent(Long startId,
+                                           Set<Long> visited,
+                                           Map<Long, User> byId) {
+
+        List<User> component = new ArrayList<>();
+        Queue<Long> q = new LinkedList<>();
+
+        visited.add(startId);
+        q.add(startId);
+
+        while (!q.isEmpty()) {
+            Long cur = q.poll();
+            User u = byId.get(cur);
+            if (u == null) continue;
+
+            component.add(u);
+
+            // Read friends from DB
+            for (Long fid : repo.getFriendIds(cur)) {
+                if (!visited.contains(fid)) {
+                    visited.add(fid);
+                    q.add(fid);
+                }
+            }
+        }
+
+        return component;
     }
 
     public List<User> mostSociableCommunity() {
         List<List<User>> comps = getCommunities();
+
         List<User> best = Collections.emptyList();
         int bestDiam = -1;
+
         for (List<User> comp : comps) {
             int diam = diameterOfComponent(comp);
             if (diam > bestDiam) {
@@ -70,43 +91,52 @@ public class NetworkService {
                 best = comp;
             }
         }
+
         return best;
     }
 
     private int diameterOfComponent(List<User> comp) {
-        Set<Long> allowed = comp.stream().map(User::getId).collect(Collectors.toSet());
-        int diam = 0;
-        for (User u : comp) diam = Math.max(diam, bfsMaxDistance(u.getId(), allowed));
-        return diam;
-    }
+        Set<Long> allowed = comp.stream()
+                .map(User::getId)
+                .collect(Collectors.toSet());
 
-    private int bfsMaxDistance(Long startId, Set<Long> allowed) {
-        List<User> all = repo.listAllUsers();
-        Map<Long, User> map = all.stream().collect(Collectors.toMap(User::getId, u -> u));
-        Queue<Long> q = new LinkedList<>();
-        Map<Long,Integer> dist = new HashMap<>();
-        q.add(startId); dist.put(startId, 0);
         int max = 0;
-        while (!q.isEmpty()) {
-            Long cur = q.poll();
-            User u = map.get(cur);
-            if (u == null) continue;
-            int cd = dist.get(cur);
-            for (User f : u.getFriends()) {
-                if (!allowed.contains(f.getId())) continue;
-                if (!dist.containsKey(f.getId())) {
-                    dist.put(f.getId(), cd + 1);
-                    max = Math.max(max, cd + 1);
-                    q.add(f.getId());
-                }
-            }
+        for (User u : comp) {
+            max = Math.max(max, bfsMaxDistance(u.getId(), allowed));
         }
         return max;
     }
 
+    private int bfsMaxDistance(Long startId, Set<Long> allowedIds) {
+        Queue<Long> q = new LinkedList<>();
+        Map<Long, Integer> dist = new HashMap<>();
+
+        q.add(startId);
+        dist.put(startId, 0);
+
+        int max = 0;
+
+        while (!q.isEmpty()) {
+            Long cur = q.poll();
+            int d = dist.get(cur);
+
+            for (Long fid : repo.getFriendIds(cur)) {
+                if (!allowedIds.contains(fid)) continue;
+
+                if (!dist.containsKey(fid)) {
+                    dist.put(fid, d + 1);
+                    max = Math.max(max, d + 1);
+                    q.add(fid);
+                }
+            }
+        }
+
+        return max;
+    }
 
     public Card createCard(String name) {
-        if (name == null || name.trim().isEmpty()) throw new IllegalArgumentException("Card name required");
+        if (name == null || name.isBlank())
+            throw new IllegalArgumentException("Card name required");
         return repo.createCard(name.trim());
     }
 
@@ -120,13 +150,26 @@ public class NetworkService {
 
     public void addDuckToCard(Long duckId, Long cardId) {
         User u = repo.findById(duckId);
-        if (!(u instanceof Duck)) throw new IllegalArgumentException("User is not a Duck");
+        if (!(u instanceof Duck))
+            throw new IllegalArgumentException("Only ducks can join cards");
         repo.addDuckToCard(duckId, cardId);
     }
 
     public void removeDuckFromCard(Long duckId, Long cardId) {
         repo.removeDuckFromCard(duckId, cardId);
     }
+
+    public List<Duck> getCardMembers(Long cardId) {
+        Card c = repo.findCard(cardId);
+        if (c == null) return List.of();
+
+        List<Duck> allDucks = repo.listAllDucks();
+
+        return allDucks.stream()
+                .filter(d -> c.hasDuck(d))
+                .collect(Collectors.toList());
+    }
+
 
     public Event createEvent(String name) {
         return repo.createEvent(name);
@@ -137,26 +180,18 @@ public class NetworkService {
     }
 
     public void subscribeToEvent(Long eventId, Long userId) {
-        Event e = repo.findEvent(eventId);
-        User u = repo.findById(userId);
-        if (e == null) throw new RuntimeException("Event not found");
-        e.subscribe(u);
+        repo.subscribeToEvent(eventId, userId);
     }
 
     public void unsubscribeFromEvent(Long eventId, Long userId) {
-        Event e = repo.findEvent(eventId);
-        User u = repo.findById(userId);
-        if (e == null) throw new RuntimeException("Event not found");
-        e.unsubscribe(u);
+        repo.unsubscribeFromEvent(eventId, userId);
     }
 
-    /**
-     * Auto-select M swimmers and run race. Returns map duck -> time.
-     */
     public Map<Duck, Double> runRace(Long eventId, int M) {
         Event e = repo.findEvent(eventId);
-        if (!(e instanceof RaceEvent)) throw new RuntimeException("Event is not a RaceEvent");
-        RaceEvent re = (RaceEvent) e;
+        if (!(e instanceof RaceEvent re))
+            throw new RuntimeException("Not a race event!");
+
         List<Duck> pool = repo.listAllDucks();
         re.autoSelectParticipants(pool, M);
         return re.simulateRace();

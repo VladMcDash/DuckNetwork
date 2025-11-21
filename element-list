@@ -1,0 +1,6 @@
+ducknetwork.domain
+ducknetwork.exceptions
+ducknetwork.repository
+ducknetwork.service
+ducknetwork.ui
+ducknetwork.util
