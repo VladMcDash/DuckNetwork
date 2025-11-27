@@ -22,6 +22,7 @@ public class NetworkService {
     private final DuckRepository duckRepo = new DuckRepository();
 
 
+
     /**
      * Adaugă un utilizator (Person sau Duck) prin UserRepository.
      */
@@ -37,7 +38,7 @@ public class NetworkService {
     }
 
     /**
-     * Gasește un utilizator după ID.
+     * Găsește un utilizator după ID.
      */
     public User findById(Long id) {
         User u = userRepo.findById(id);
@@ -47,10 +48,21 @@ public class NetworkService {
     }
 
     /**
-     * Listeaza toți utilizatorii (Persoane + Rate).
+     * Listează toți utilizatorii (Persoane + Rațe).
      */
     public List<User> listAllUsers() {
         return userRepo.findAll();
+    }
+
+    /**
+     * Returnează o listă care conține doar utilizatorii de tip Duck.
+     * Folosită pentru popularea tabelului din interfața grafică.
+     */
+    public List<Duck> listAllDucks() {
+        return userRepo.findAll().stream()
+                .filter(u -> u instanceof Duck)
+                .map(u -> (Duck) u)
+                .collect(Collectors.toList());
     }
 
     public void addFriend(Long id1, Long id2) {
@@ -172,6 +184,7 @@ public class NetworkService {
         return max;
     }
 
+
     public Card createCard(String name) {
         if (name == null || name.isBlank())
             throw new IllegalArgumentException("Card name required");
@@ -187,7 +200,6 @@ public class NetworkService {
     }
 
     public void addDuckToCard(Long duckId, Long cardId) {
-        // Folosim findById pentru verificare
         User u = userRepo.findById(duckId);
         if (u == null)
             throw new DomainExceptions.UserNotFoundException("User with id " + duckId + " not found");
@@ -253,5 +265,9 @@ public class NetworkService {
         List<Duck> pool = duckRepo.findAll();
         re.autoSelectParticipants(pool, M);
         return re.simulateRace();
+    }
+
+    public List<Duck> debugListAllDucks() {
+        return duckRepo.findAll();
     }
 }

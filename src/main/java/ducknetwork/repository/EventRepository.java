@@ -16,7 +16,6 @@ public class EventRepository {
 
     private final RaceBuoyRepository raceBuoyRepo = new RaceBuoyRepository();
 
-    // Nu mai exista dependentele UserRepository/EventSubscriberRepository in aceasta logica de incarcare
 
     public Event save(String name) {
         String sql = "INSERT INTO events (name, type) VALUES (?, 'EVENT') RETURNING id";
