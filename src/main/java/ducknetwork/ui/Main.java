@@ -1,9 +1,8 @@
 package ducknetwork.ui;
 
 import ducknetwork.domain.*;
-// Am eliminat importul pentru ducknetwork.repository.Repo
 import ducknetwork.service.NetworkService;
-import ducknetwork.persistence.Database; // Folosim noul Database Singleton
+import ducknetwork.persistence.Database;
 import ducknetwork.exceptions.DomainExceptions;
 
 import java.time.LocalDate;

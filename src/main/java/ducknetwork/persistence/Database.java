@@ -9,27 +9,23 @@ import java.sql.SQLException;
  */
 public class Database {
 
-    // Connection details - hardcoded as in the original file
     private static final String URL = "jdbc:postgresql://localhost:5432/duckdb";
     private static final String USER = "duckuser";
     private static final String PASSWORD = "Vlady123";
 
     private static Database INSTANCE;
-    private Connection connection; // NU mai este final
+    private Connection connection;
 
     /**
      * Stabilește conexiunea inițială.
      */
     private Database() {
         try {
-            // 1. Load the Driver
             Class.forName("org.postgresql.Driver");
-            // 2. Create the single connection instance
             this.connection = DriverManager.getConnection(URL, USER, PASSWORD);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("PostgreSQL JDBC Driver not found! (nu merge!)", e);
         } catch (SQLException e) {
-            // Aruncăm o excepție clară la eșecul inițial
             throw new RuntimeException("Failed to establish initial database connection!", e);
         }
     }
@@ -55,7 +51,6 @@ public class Database {
         if (this.connection == null || this.connection.isClosed()) {
             try {
                 this.connection = DriverManager.getConnection(URL, USER, PASSWORD);
-                //System.out.println("Conexiune re-stabilită cu succes.");
             } catch (SQLException e) {
                 throw new SQLException("Re-establishment of the database connection failed: " + e.getMessage(), e);
             }
