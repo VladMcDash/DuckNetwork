@@ -14,7 +14,6 @@ public class DuckApplication extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        // Load the single expected resource path. Adjust the path or move the FXML to `src/main/resources/gui/MainView.fxml`.
         URL fxml = getClass().getResource("/gui/MainView.fxml");
         if (fxml == null) {
             throw new IllegalStateException("FXML not found at `/gui/MainView.fxml`. Place the file at `src/main/resources/gui/MainView.fxml` or update the path.");
@@ -31,7 +30,7 @@ public class DuckApplication extends Application {
 
     private void showError(String text) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Eroare Critică");
+        alert.setTitle("Eroare");
         alert.setContentText(text);
         alert.showAndWait();
     }
