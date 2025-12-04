@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
  */
 public class NetworkService {
 
-    // Dependințe injectate (instanțiate aici pentru simplitate)
     private final UserRepository userRepo = new UserRepository();
     private final FriendRepository friendRepo = new FriendRepository();
     private final CardRepository cardRepo = new CardRepository();

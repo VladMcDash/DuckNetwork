@@ -1,39 +1,35 @@
-import org.gradle.api.tasks.JavaExec
-
 plugins {
-    id("application")
-    id("org.openjfx.javafxplugin") version "0.0.14"
+    id("java")
+    id("application") // Necesar pentru aplicații JavaFX
+    id("org.openjfx.javafxplugin") version "0.1.0" // Plugin-ul JavaFX
 }
 
-javafx {
-    version = "17"
-    modules = listOf("javafx.controls", "javafx.fxml")
-}
+group = "org.example"
+version = "1.0-SNAPSHOT"
+
 repositories {
     mavenCentral()
-    mavenLocal() // optional: useful if you've published artifacts locally
 }
-application {
-    //mainModule.set("ducknetwork")
-    mainClass.set("ducknetwork.gui.DuckApplication")
-    applicationDefaultJvmArgs = listOf("--enable-native-access=javafx.graphics")
+
+// Configurare JavaFX (versiunile din exemplul tău)
+javafx {
+    version = "21"
+    modules = listOf("javafx.controls", "javafx.fxml")
 }
-tasks.withType(JavaExec::class.java).configureEach {
-    modularity.inferModulePath.set(false)
-}
-tasks.named("run", JavaExec::class.java).configure {
-    modularity.inferModulePath.set(false)
-    classpath = sourceSets["main"].runtimeClasspath
-}
+
+
 dependencies {
+    // Testare
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-    implementation("org.openjfx:javafx-controls:17.0.2:win")
-    implementation("org.openjfx:javafx-fxml:17.0.2:win")
+
+    // Bază de date (am păstrat versiunea mai nouă și HikariCP)
     implementation("org.postgresql:postgresql:42.7.0")
     implementation("com.zaxxer:HikariCP:5.0.1")
 
+    // Biblioteci UI suplimentare (din exemplul lab6-gui pe care l-ai trimis)
+    // Le poți șterge dacă nu le folosești, dar sunt utile pentru controale avansate
     implementation("org.controlsfx:controlsfx:11.1.1")
     implementation("com.dlsc.formsfx:formsfx-core:11.5.0") {
         exclude(group = "org.openjfx")
