@@ -13,6 +13,7 @@ import java.util.Optional;
 
 public class DuckRepository {
 
+
     public void saveDetails(Connection conn, Duck d) throws SQLException {
         if (d.getId() == null)
             throw new RuntimeException("Duck must have user_id before saving details");
@@ -70,42 +71,120 @@ public class DuckRepository {
         }
     }
 
+    /**
+     * Metoda veche findAll, refăcută să folosească paginarea, pentru a nu rupe codul vechi.
+     */
     public List<Duck> findAll() {
-        List<Duck> list = new ArrayList<>();
+        // Returnează prima pagină cu o limită mare (simulând o listă completă)
+        return findPage("TOATE", 1, 1000).getContent();
+    }
 
-        String sql = """
+    /**
+     * Numără toate rațele, opțional filtrând după tip.
+     */
+    public long countAll(String typeFilter) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) AS total FROM users u JOIN duck_details d ON d.user_id = u.id WHERE u.type = 'DUCK'");
+
+        List<String> params = new ArrayList<>();
+        if (typeFilter != null && !typeFilter.equalsIgnoreCase("TOATE")) {
+            sql.append(" AND d.type = ?");
+            params.add(typeFilter);
+        }
+
+        try (Connection conn = Database.getInstance().getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql.toString())) {
+
+            for(int i = 0; i < params.size(); i++) {
+                statement.setString(i + 1, params.get(i));
+            }
+
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    return resultSet.getLong("total");
+                }
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error counting ducks with filter " + typeFilter, e);
+        }
+        return 0;
+    }
+
+    /**
+     * Returnează o pagină de rațe, opțional filtrată după tip.
+     */
+    public Page<Duck> findPage(String typeFilter, int pageNumber, int pageSize) {
+        if (pageNumber <= 0 || pageSize <= 0) {
+            throw new IllegalArgumentException("Page number and size must be positive.");
+        }
+
+        long totalElements = countAll(typeFilter);
+        int offset = (pageNumber - 1) * pageSize;
+
+        // Ajusteaza pagina ceruta
+        if (offset >= totalElements && totalElements > 0) {
+            int totalPages = (int) Math.ceil((double) totalElements / pageSize);
+            pageNumber = Math.max(1, totalPages);
+            offset = (pageNumber - 1) * pageSize;
+        }
+
+
+        StringBuilder sql = new StringBuilder("""
                 SELECT u.id, u.username, u.email, u.password, 
                        d.type, d.speed, d.endurance 
                 FROM users u 
                 JOIN duck_details d ON d.user_id = u.id 
                 WHERE u.type = 'DUCK'
-                ORDER BY u.id
-                """;
+                """);
+
+        List<Object> params = new ArrayList<>();
+        if (typeFilter != null && !typeFilter.equalsIgnoreCase("TOATE")) {
+            sql.append(" AND d.type = ?");
+            params.add(typeFilter);
+        }
+
+        sql.append(" ORDER BY u.id LIMIT ? OFFSET ?");
+
+        //paginare
+        params.add(pageSize);
+        params.add(offset);
+
+        List<Duck> list = new ArrayList<>();
 
         try (Connection conn = Database.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
 
-            while (rs.next()) {
-                Long id = rs.getLong("id");
-                String username = rs.getString("username");
-                String email = rs.getString("email");
-                String password = rs.getString("password");
+            for(int i = 0; i < params.size(); i++) {
+                if (params.get(i) instanceof Integer) {
+                    ps.setInt(i + 1, (Integer) params.get(i));
+                } else if (params.get(i) instanceof String) {
+                    ps.setString(i + 1, (String) params.get(i));
+                } else {
+                    ps.setObject(i + 1, params.get(i));
+                }
+            }
 
-                String type = rs.getString("type");
-                double speed = rs.getDouble("speed");
-                double endurance = rs.getDouble("endurance");
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Long id = rs.getLong("id");
+                    String username = rs.getString("username");
+                    String email = rs.getString("email");
+                    String password = rs.getString("password");
 
-                Duck d = createDuckInstance(id, username, email, password, speed, endurance, type);
+                    String type = rs.getString("type");
+                    double speed = rs.getDouble("speed");
+                    double endurance = rs.getDouble("endurance");
 
-                list.add(d);
+                    Duck d = createDuckInstance(id, username, email, password, speed, endurance, type);
+
+                    list.add(d);
+                }
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException("Error reading all ducks: " + e.getMessage(), e);
+            throw new RuntimeException("Error reading paginated ducks with filter " + typeFilter + ": " + e.getMessage(), e);
         }
 
-        return list;
+        return new Page<>(list, totalElements, pageNumber, pageSize);
     }
 
     private Duck createDuckInstance(Long id, String username, String email, String password,

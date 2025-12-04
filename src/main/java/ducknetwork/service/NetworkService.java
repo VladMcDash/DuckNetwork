@@ -21,7 +21,6 @@ public class NetworkService {
     private final DuckRepository duckRepo = new DuckRepository();
 
 
-
     /**
      * Adaugă un utilizator (Person sau Duck) prin UserRepository.
      */
@@ -47,22 +46,28 @@ public class NetworkService {
     }
 
     /**
-     * Listează toți utilizatorii (Persoane + Rațe).
+     * Listează toți utilizatorii (Persoane + Rațe). (Păstrat)
      */
     public List<User> listAllUsers() {
         return userRepo.findAll();
     }
 
     /**
-     * Returnează o listă care conține doar utilizatorii de tip Duck.
-     * Folosită pentru popularea tabelului din interfața grafică.
+     * Returnează o pagină de rațe, aplicând filtrarea după tip. (NOU)
+     * Aceasta este metoda folosită de GUI pentru afișarea paginată și filtrată.
+     */
+    public Page<Duck> getDucksPage(String typeFilter, int pageNumber, int pageSize) {
+        return duckRepo.findPage(typeFilter, pageNumber, pageSize);
+    }
+
+    /**
+     * Metodă veche, funcționalitatea păstrată de dragul compatibilității.
+     * Folosește acum logica findAll() din Repo (care este ne-paginată).
      */
     public List<Duck> listAllDucks() {
-        return userRepo.findAll().stream()
-                .filter(u -> u instanceof Duck)
-                .map(u -> (Duck) u)
-                .collect(Collectors.toList());
+        return duckRepo.findAll();
     }
+
 
     public void addFriend(Long id1, Long id2) {
         if (id1 == null || id2 == null) throw new IllegalArgumentException("IDs cannot be null");
