@@ -20,6 +20,43 @@ public class NetworkService {
     private final EventSubscriberRepository eventSubscriberRepo = new EventSubscriberRepository();
     private final DuckRepository duckRepo = new DuckRepository();
 
+    public User findUserByEmail(String email) {
+        User u = userRepo.findByEmail(email);
+        if (u == null)
+            throw new DomainExceptions.UserNotFoundException("User with email " + email + " not found");
+        return u;
+    }
+
+    public void removeUserByEmail(String email) {
+        User user = findUserByEmail(email);
+        removeUser(user.getId());
+    }
+
+    public List<FriendshipDTO> listAllFriendships() {
+        List<User> allUsers = userRepo.findAll();
+        List<FriendshipDTO> friendships = new ArrayList<>();
+
+        Set<String> processedPairs = new HashSet<>();
+
+        for (User u : allUsers) {
+            String email1 = u.getEmail();
+
+            for (Long friendId : friendRepo.getFriendIds(u.getId())) {
+                User friend = userRepo.findById(friendId);
+                if (friend == null) continue;
+
+                String email2 = friend.getEmail();
+
+                String pair1 = email1.compareTo(email2) < 0 ? email1 + "-" + email2 : email2 + "-" + email1;
+
+                if (processedPairs.add(pair1)) {
+                    friendships.add(new FriendshipDTO(email1, email2));
+                }
+            }
+        }
+        return friendships;
+    }
+
 
     /**
      * Adaugă un utilizator (Person sau Duck) prin UserRepository.
@@ -29,14 +66,14 @@ public class NetworkService {
     }
 
     /**
-     * Șterge un utilizator prin UserRepository.
+     * Șterge un utilizator prin UserRepository (Păstrat pentru coerență).
      */
     public void removeUser(Long id) {
         userRepo.delete(id);
     }
 
     /**
-     * Gasește un utilizator după ID.
+     * Găsește un utilizator după ID.
      */
     public User findById(Long id) {
         User u = userRepo.findById(id);
@@ -46,14 +83,14 @@ public class NetworkService {
     }
 
     /**
-     * Listeaza toți utilizatorii (Persoane + Rate).
+     * Listează toți utilizatorii (Persoane + Rațe).
      */
     public List<User> listAllUsers() {
         return userRepo.findAll();
     }
 
     /**
-     * Returnează o pagina de rate, filtrata dupa tip.
+     * Returnează o pagină de rațe, aplicând filtrarea după tip.
      */
     public Page<Duck> getDucksPage(String typeFilter, int pageNumber, int pageSize) {
         return duckRepo.findPage(typeFilter, pageNumber, pageSize);
@@ -63,6 +100,17 @@ public class NetworkService {
         return duckRepo.findAll();
     }
 
+    public void addFriendByEmails(String email1, String email2) {
+        User u1 = findUserByEmail(email1);
+        User u2 = findUserByEmail(email2);
+        addFriend(u1.getId(), u2.getId());
+    }
+
+    public void removeFriendByEmails(String email1, String email2) {
+        User u1 = findUserByEmail(email1);
+        User u2 = findUserByEmail(email2);
+        removeFriend(u1.getId(), u2.getId());
+    }
 
     public void addFriend(Long id1, Long id2) {
         if (id1 == null || id2 == null) throw new IllegalArgumentException("IDs cannot be null");
@@ -70,7 +118,7 @@ public class NetworkService {
         friendRepo.addFriend(id1, id2);
     }
 
-    public void removeFriend(Long id1, Long id2) {
+    private void removeFriend(Long id1, Long id2) {
         friendRepo.removeFriend(id1, id2);
     }
 
@@ -78,6 +126,9 @@ public class NetworkService {
         return getCommunities().size();
     }
 
+    /**
+     * Compute connected components of the friendship graph.
+     */
     public List<List<User>> getCommunities() {
         List<User> allUsers = userRepo.findAll();
         Map<Long, User> byId = allUsers.stream()
@@ -124,22 +175,6 @@ public class NetworkService {
         return component;
     }
 
-    public List<User> mostSociableCommunity() {
-        List<List<User>> comps = getCommunities();
-
-        List<User> best = Collections.emptyList();
-        int bestDiam = -1;
-
-        for (List<User> comp : comps) {
-            int diam = diameterOfComponent(comp);
-            if (diam > bestDiam) {
-                bestDiam = diam;
-                best = comp;
-            }
-        }
-
-        return best;
-    }
 
     private int diameterOfComponent(List<User> comp) {
         Set<Long> allowed = comp.stream()
@@ -234,7 +269,7 @@ public class NetworkService {
     }
 
     /**
-     * Listeaza toate evenimentele prin EventRepository.
+     * Listează toate evenimentele prin EventRepository.
      */
     public List<Event> listEvents() {
         return eventRepo.findAll();
@@ -265,5 +300,22 @@ public class NetworkService {
 
     public List<Duck> debugListAllDucks() {
         return duckRepo.findAll();
+    }
+
+    public List<User> mostSociableCommunity() {
+        List<List<User>> comps = getCommunities();
+
+        List<User> best = Collections.emptyList();
+        int bestDiam = -1;
+
+        for (List<User> comp : comps) {
+            int diam = diameterOfComponent(comp);
+            if (diam > bestDiam) {
+                bestDiam = diam;
+                best = comp;
+            }
+        }
+
+        return best;
     }
 }

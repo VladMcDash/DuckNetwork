@@ -10,6 +10,7 @@ import javafx.scene.layout.VBox;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,6 +18,7 @@ public class DuckController {
 
     private final NetworkService service = new NetworkService();
 
+    // --- ELEMENTE TAB 1: PAGINARE ---
     private int currentPage = 1;
     private final int pageSize = 10;
     private String currentFilterType = "TOATE";
@@ -29,16 +31,19 @@ public class DuckController {
     @FXML private TableColumn<Duck, Double> tableColumnSpeed;
     @FXML private TableColumn<Duck, Double> tableColumnEndurance;
 
-    @FXML private ComboBox<String> comboBoxFilterType;
+    // Filtrare
+    @FXML private ComboBox<String> comboBoxDuckFilterType;
     @FXML private Button prevButton;
     @FXML private Button nextButton;
     @FXML private Label pageInfoLabel;
 
+    // --- ELEMENTE TAB 2: ADMINISTRARE ---
     @FXML private TextField txtUsername;
     @FXML private TextField txtEmail;
     @FXML private TextField txtPassword;
     @FXML private ComboBox<String> comboUserType;
 
+    // Person specific fields
     @FXML private VBox personFieldsContainer;
     @FXML private TextField txtFirstName;
     @FXML private TextField txtLastName;
@@ -46,16 +51,25 @@ public class DuckController {
     @FXML private TextField txtOccupation;
     @FXML private TextField txtEmpathy;
 
+    // Duck specific fields
     @FXML private VBox duckFieldsContainer;
     @FXML private TextField txtSpeed;
     @FXML private TextField txtEndurance;
-    @FXML private ComboBox<String> comboDuckType;
+    @FXML private ComboBox<String> comboDuckCreationType; // Tipul ratei la creare
 
-    @FXML private TextField txtDeleteId;
-    @FXML private ComboBox<Long> comboUser1;
-    @FXML private ComboBox<Long> comboUser2;
+    // Delete & Friends
+    @FXML private TextField txtDeleteEmail; // Ștergere după Email
+    @FXML private ComboBox<String> comboUser1Email; // Selecție prieteni după Email
+    @FXML private ComboBox<String> comboUser2Email; // Selecție prieteni după Email
     @FXML private Label lblStatus;
 
+    // Tabel Prietenii (Task 2)
+    @FXML private TableView<FriendshipDTO> friendshipTable;
+    @FXML private TableColumn<FriendshipDTO, String> colUser1Email;
+    @FXML private TableColumn<FriendshipDTO, String> colUser2Email;
+
+
+    // --- ELEMENTE TAB 3: STATISTICI ---
     @FXML private Label lblCommunityCount;
     @FXML private TextArea txtMostSociable;
 
@@ -66,7 +80,9 @@ public class DuckController {
         initAdministrationTab();
     }
 
+    // ================== TAB 1 LOGIC ==================
     private void initPaginationTab() {
+        // Set up TableView columns (Duck)
         tableColumnId.setCellValueFactory(new PropertyValueFactory<>("id"));
         tableColumnUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
         tableColumnEmail.setCellValueFactory(new PropertyValueFactory<>("email"));
@@ -74,10 +90,18 @@ public class DuckController {
         tableColumnSpeed.setCellValueFactory(new PropertyValueFactory<>("speed"));
         tableColumnEndurance.setCellValueFactory(new PropertyValueFactory<>("endurance"));
 
-        comboBoxFilterType.getItems().addAll("TOATE", "SWIMMING", "FLYING", "FLYING_AND_SWIMMING");
-        comboBoxFilterType.getSelectionModel().select(currentFilterType);
+        // Task 1: Populate ComboBox from ENUM (Filtrare)
+        List<String> duckTypes = Arrays.stream(DuckType.values())
+                .map(Enum::toString)
+                .collect(Collectors.toList());
 
-        comboBoxFilterType.valueProperty().addListener((observable, oldValue, newValue) -> {
+        // CORECTIE EROARE addAll: adaugam "TOATE" separat
+        comboBoxDuckFilterType.getItems().add("TOATE");
+        comboBoxDuckFilterType.getItems().addAll(duckTypes);
+
+        comboBoxDuckFilterType.getSelectionModel().select(currentFilterType);
+
+        comboBoxDuckFilterType.valueProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(currentFilterType)) {
                 currentFilterType = newValue;
                 currentPage = 1;
@@ -93,15 +117,21 @@ public class DuckController {
             Page<Duck> duckPage = service.getDucksPage(currentFilterType, currentPage, pageSize);
             tableView.setItems(FXCollections.observableArrayList(duckPage.getContent()));
 
-            pageInfoLabel.setText(String.format("Pagina %d din %d (Total rate: %d)",
-                    duckPage.getCurrentPage(),
-                    duckPage.getTotalPages(),
-                    duckPage.getTotalElements()));
-            prevButton.setDisable(duckPage.getCurrentPage() <= 1);
-            nextButton.setDisable(duckPage.getCurrentPage() >= duckPage.getTotalPages());
+            updatePaginationControls(duckPage);
+
         } catch (Exception e) {
+            System.err.println("Eroare la încărcarea paginii: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void updatePaginationControls(Page<Duck> page) {
+        pageInfoLabel.setText(String.format("Pagina %d din %d (Total: %d)",
+                page.getCurrentPage(),
+                page.getTotalPages(),
+                page.getTotalElements()));
+        prevButton.setDisable(page.getCurrentPage() <= 1);
+        nextButton.setDisable(page.getCurrentPage() >= page.getTotalPages());
     }
 
     @FXML private void handlePrevPage() {
@@ -115,11 +145,19 @@ public class DuckController {
         currentPage++;
         loadDucksPage();
     }
-//2
-    private void initAdministrationTab() {
-        comboUserType.getItems().addAll("PERSON", "DUCK");
-        comboDuckType.getItems().addAll("SWIMMING", "FLYING", "FLYING_AND_SWIMMING");
 
+    // ================== TAB 2 LOGIC (ADMINISTRARE) ==================
+    private void initAdministrationTab() {
+        // Setup Combo Types
+        comboUserType.getItems().addAll("PERSON", "DUCK");
+
+        // Task 1: Populate ComboBox from ENUM (Creare)
+        List<String> duckTypes = Arrays.stream(DuckType.values())
+                .map(Enum::toString)
+                .collect(Collectors.toList());
+        comboDuckCreationType.getItems().addAll(duckTypes);
+
+        // Setarea vizibilitatii containerelor in functie de tipul de utilizator
         comboUserType.valueProperty().addListener((obs, oldVal, newVal) -> {
             boolean isDuck = "DUCK".equals(newVal);
             boolean isPerson = "PERSON".equals(newVal);
@@ -129,8 +167,11 @@ public class DuckController {
 
             personFieldsContainer.setVisible(isPerson);
             personFieldsContainer.setManaged(isPerson);
-
         });
+
+        // Task 2: Setup Friendship Table columns
+        colUser1Email.setCellValueFactory(new PropertyValueFactory<>("user1Email"));
+        colUser2Email.setCellValueFactory(new PropertyValueFactory<>("user2Email"));
 
         refreshUserLists();
     }
@@ -138,13 +179,21 @@ public class DuckController {
     private void refreshUserLists() {
         try {
             List<User> users = service.listAllUsers();
-            List<Long> ids = users.stream().map(User::getId).collect(Collectors.toList());
-            comboUser1.setItems(FXCollections.observableArrayList(ids));
-            comboUser2.setItems(FXCollections.observableArrayList(ids));
 
-            txtDeleteId.clear();
+            // Task 3: Populare ComboBox-uri cu Email-uri
+            List<String> emails = users.stream().map(User::getEmail).collect(Collectors.toList());
+            comboUser1Email.setItems(FXCollections.observableArrayList(emails));
+            comboUser2Email.setItems(FXCollections.observableArrayList(emails));
+
+            // Task 2: Actualizare Tabel Prietenii
+            List<FriendshipDTO> friendships = service.listAllFriendships();
+            friendshipTable.setItems(FXCollections.observableArrayList(friendships));
+
+            txtDeleteEmail.clear();
+            lblStatus.setText("Asteptare...");
+
         } catch (Exception e) {
-            System.err.println("Nu s-au putut incarca utilizatorii pentru combobox: " + e.getMessage());
+            System.err.println("Nu s-au putut incarca datele pentru tabul Administrare: " + e.getMessage());
         }
     }
 
@@ -157,17 +206,19 @@ public class DuckController {
             String password = txtPassword.getText();
 
             if (username.isEmpty() || type == null) {
-                lblStatus.setText("Eroare: Username/Tip sunt empty!");
+                lblStatus.setText("Eroare: Username si Tip sunt obligatorii!");
                 return;
             }
 
             User newUser;
-            Long tempId = null;
+            Long tempId = null; // ID-ul este setat de baza de date
 
             if ("DUCK".equals(type)) {
-                String duckType = comboDuckType.getValue();
+                String duckType = comboDuckCreationType.getValue();
                 double speed = Double.parseDouble(txtSpeed.getText());
                 double endurance = Double.parseDouble(txtEndurance.getText());
+
+                if (duckType == null) throw new IllegalArgumentException("Tipul ratei este obligatoriu.");
 
                 if ("SWIMMING".equals(duckType)) {
                     newUser = new SwimmingDuck(tempId, username, email, password, speed, endurance);
@@ -185,7 +236,7 @@ public class DuckController {
                 try {
                     birthDate = LocalDate.parse(txtBirthDate.getText(), DateTimeFormatter.ISO_DATE);
                 } catch (Exception e) {
-                    lblStatus.setText("Eroare: Data Nasterii trebuie sa fie in format YYYY-MM-DD.");
+                    lblStatus.setText("Eroare: Data Nașterii trebuie să fie în format YYYY-MM-DD.");
                     return;
                 }
 
@@ -193,10 +244,11 @@ public class DuckController {
                 try {
                     empathy = Integer.parseInt(txtEmpathy.getText());
                 } catch (NumberFormatException e) {
-                    lblStatus.setText("Eroare: Empathy trebuie sa fie un int.");
+                    lblStatus.setText("Eroare: Empatia trebuie să fie un număr întreg.");
                     return;
                 }
 
+                // Apelul constructorului corect (9 parametri)
                 newUser = new Person(tempId, username, email, password,
                         firstName, lastName, birthDate,
                         occupation, empathy);
@@ -213,8 +265,7 @@ public class DuckController {
             clearAddForm();
 
         } catch (NumberFormatException e) {
-            lblStatus.setText("Eroare de format numeric.");
-            e.printStackTrace();
+            lblStatus.setText("Eroare de format numeric (viteză, rezistență, empatie).");
         } catch (Exception e) {
             lblStatus.setText("Eroare la adaugare: " + e.getMessage());
             e.printStackTrace();
@@ -223,16 +274,17 @@ public class DuckController {
 
     @FXML
     private void handleDeleteUser() {
+        // Task 4: Ștergere după Email
         try {
-            String idStr = txtDeleteId.getText();
-            if (idStr.isEmpty()) {
-                lblStatus.setText("Introdu ID-ul utilizatorului de sters.");
+            String email = txtDeleteEmail.getText();
+            if (email.isEmpty()) {
+                lblStatus.setText("Introdu Email-ul utilizatorului de sters.");
                 return;
             }
-            Long id = Long.parseLong(idStr);
-            service.removeUser(id);
 
-            lblStatus.setText("Succes: Utilizator " + id + " sters.");
+            service.removeUserByEmail(email);
+
+            lblStatus.setText("Succes: Utilizator " + email + " sters.");
             refreshUserLists();
             loadDucksPage();
         } catch (Exception e) {
@@ -242,17 +294,19 @@ public class DuckController {
 
     @FXML
     private void handleAddFriend() {
+        // Task 3: Adăugare Prietenie după Email
         try {
-            Long id1 = comboUser1.getValue();
-            Long id2 = comboUser2.getValue();
+            String email1 = comboUser1Email.getValue();
+            String email2 = comboUser2Email.getValue();
 
-            if (id1 == null || id2 == null) {
-                lblStatus.setText("Selecteaza ambii utilizatori!");
+            if (email1 == null || email2 == null) {
+                lblStatus.setText("Selecteaza ambii utilizatori (Email)!");
                 return;
             }
 
-            service.addFriend(id1, id2);
-            lblStatus.setText("Succes: Prietenie creata intre " + id1 + " si " + id2);
+            service.addFriendByEmails(email1, email2);
+            lblStatus.setText("Succes: Prietenie creata intre " + email1 + " si " + email2);
+            refreshUserLists();
         } catch (Exception e) {
             lblStatus.setText("Eroare prietenie: " + e.getMessage());
         }
@@ -260,17 +314,19 @@ public class DuckController {
 
     @FXML
     private void handleRemoveFriend() {
+        // Task 3: Ștergere Prietenie după Email
         try {
-            Long id1 = comboUser1.getValue();
-            Long id2 = comboUser2.getValue();
+            String email1 = comboUser1Email.getValue();
+            String email2 = comboUser2Email.getValue();
 
-            if (id1 == null || id2 == null) {
-                lblStatus.setText("Selecteaza ambii utilizatori!");
+            if (email1 == null || email2 == null) {
+                lblStatus.setText("Selecteaza ambii utilizatori (Email)!");
                 return;
             }
 
-            service.removeFriend(id1, id2);
-            lblStatus.setText("Succes: Prietenie stearsa intre " + id1 + " si " + id2);
+            service.removeFriendByEmails(email1, email2);
+            lblStatus.setText("Succes: Prietenie stearsa intre " + email1 + " si " + email2);
+            refreshUserLists();
         } catch (Exception e) {
             lblStatus.setText("Eroare stergere prietenie: " + e.getMessage());
         }
@@ -282,7 +338,8 @@ public class DuckController {
         txtOccupation.clear(); txtEmpathy.clear();
         txtSpeed.clear(); txtEndurance.clear();
     }
-//3
+
+    // ================== TAB 3 LOGIC (STATISTICI) ==================
     @FXML
     private void handleCalculateStats() {
         try {

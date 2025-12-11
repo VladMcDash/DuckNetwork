@@ -115,6 +115,31 @@ public class UserRepository {
         return null;
     }
 
+    /**
+     * NOU: Găsește un utilizator după adresa de email.
+     * Interoghează tabela users pentru ID, apoi folosește findById(ID)
+     * pentru a rezolva obiectul specific (Person/Duck).
+     */
+    public User findByEmail(String email) {
+        String sql = "SELECT id FROM users WHERE email = ?";
+
+        try (Connection conn = Database.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, email);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null; // Email not found
+
+                Long id = rs.getLong("id");
+                // Refolosim logica existentă pentru a găsi obiectul complet (Person sau Duck)
+                return findById(id);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding user by email " + email, e);
+        }
+    }
+
     public List<User> findAll() {
         List<User> users = new ArrayList<>();
         users.addAll(personRepo.findAll());
