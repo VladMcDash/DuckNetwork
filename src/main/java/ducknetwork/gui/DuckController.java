@@ -93,7 +93,7 @@ public class DuckController {
             Page<Duck> duckPage = service.getDucksPage(currentFilterType, currentPage, pageSize);
             tableView.setItems(FXCollections.observableArrayList(duckPage.getContent()));
 
-            pageInfoLabel.setText(String.format("Pagina %d din %d (Total: %d)",
+            pageInfoLabel.setText(String.format("Pagina %d din %d (Total rate: %d)",
                     duckPage.getCurrentPage(),
                     duckPage.getTotalPages(),
                     duckPage.getTotalElements()));
@@ -115,9 +115,8 @@ public class DuckController {
         currentPage++;
         loadDucksPage();
     }
-
+//2
     private void initAdministrationTab() {
-        // Setup Combo Types
         comboUserType.getItems().addAll("PERSON", "DUCK");
         comboDuckType.getItems().addAll("SWIMMING", "FLYING", "FLYING_AND_SWIMMING");
 
@@ -194,7 +193,7 @@ public class DuckController {
                 try {
                     empathy = Integer.parseInt(txtEmpathy.getText());
                 } catch (NumberFormatException e) {
-                    lblStatus.setText("Eroare: Empatia trebuie sa fie un int.");
+                    lblStatus.setText("Eroare: Empathy trebuie sa fie un int.");
                     return;
                 }
 
@@ -283,7 +282,7 @@ public class DuckController {
         txtOccupation.clear(); txtEmpathy.clear();
         txtSpeed.clear(); txtEndurance.clear();
     }
-
+//3
     @FXML
     private void handleCalculateStats() {
         try {

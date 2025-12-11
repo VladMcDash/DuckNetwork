@@ -71,16 +71,13 @@ public class DuckRepository {
         }
     }
 
-    /**
-     * Metoda veche findAll, refăcută să folosească paginarea, pentru a nu rupe codul vechi.
-     */
+
     public List<Duck> findAll() {
-        // Returnează prima pagină cu o limită mare (simulând o listă completă)
         return findPage("TOATE", 1, 1000).getContent();
     }
 
     /**
-     * Numără toate rațele, opțional filtrând după tip.
+     * Numara toate rațele.
      */
     public long countAll(String typeFilter) {
         StringBuilder sql = new StringBuilder("SELECT COUNT(*) AS total FROM users u JOIN duck_details d ON d.user_id = u.id WHERE u.type = 'DUCK'");
@@ -110,7 +107,7 @@ public class DuckRepository {
     }
 
     /**
-     * Returnează o pagină de rațe, opțional filtrată după tip.
+     * Returneaza o pagina de rațe, opțional filtrata dupa tip.
      */
     public Page<Duck> findPage(String typeFilter, int pageNumber, int pageSize) {
         if (pageNumber <= 0 || pageSize <= 0) {
@@ -120,13 +117,12 @@ public class DuckRepository {
         long totalElements = countAll(typeFilter);
         int offset = (pageNumber - 1) * pageSize;
 
-        // Ajusteaza pagina ceruta
+        // Ajusteaza pagina
         if (offset >= totalElements && totalElements > 0) {
             int totalPages = (int) Math.ceil((double) totalElements / pageSize);
             pageNumber = Math.max(1, totalPages);
             offset = (pageNumber - 1) * pageSize;
         }
-
 
         StringBuilder sql = new StringBuilder("""
                 SELECT u.id, u.username, u.email, u.password, 

@@ -36,7 +36,7 @@ public class NetworkService {
     }
 
     /**
-     * Găsește un utilizator după ID.
+     * Gasește un utilizator după ID.
      */
     public User findById(Long id) {
         User u = userRepo.findById(id);
@@ -46,24 +46,19 @@ public class NetworkService {
     }
 
     /**
-     * Listează toți utilizatorii (Persoane + Rațe). (Păstrat)
+     * Listeaza toți utilizatorii (Persoane + Rate).
      */
     public List<User> listAllUsers() {
         return userRepo.findAll();
     }
 
     /**
-     * Returnează o pagină de rațe, aplicând filtrarea după tip. (NOU)
-     * Aceasta este metoda folosită de GUI pentru afișarea paginată și filtrată.
+     * Returnează o pagina de rate, filtrata dupa tip.
      */
     public Page<Duck> getDucksPage(String typeFilter, int pageNumber, int pageSize) {
         return duckRepo.findPage(typeFilter, pageNumber, pageSize);
     }
 
-    /**
-     * Metodă veche, funcționalitatea păstrată de dragul compatibilității.
-     * Folosește acum logica findAll() din Repo (care este ne-paginată).
-     */
     public List<Duck> listAllDucks() {
         return duckRepo.findAll();
     }
@@ -83,9 +78,6 @@ public class NetworkService {
         return getCommunities().size();
     }
 
-    /**
-     * Compute connected components of the friendship graph.
-     */
     public List<List<User>> getCommunities() {
         List<User> allUsers = userRepo.findAll();
         Map<Long, User> byId = allUsers.stream()
@@ -242,7 +234,7 @@ public class NetworkService {
     }
 
     /**
-     * Listează toate evenimentele prin EventRepository.
+     * Listeaza toate evenimentele prin EventRepository.
      */
     public List<Event> listEvents() {
         return eventRepo.findAll();
