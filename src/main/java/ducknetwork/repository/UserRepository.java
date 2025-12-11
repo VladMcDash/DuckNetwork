@@ -5,6 +5,7 @@ import ducknetwork.domain.Person;
 import ducknetwork.domain.Duck;
 import ducknetwork.exceptions.DomainExceptions;
 import ducknetwork.persistence.Database;
+import ducknetwork.util.PasswordHasher; // IMPORT NOU
 import ducknetwork.util.Validators;
 
 import java.sql.Connection;
@@ -29,6 +30,8 @@ public class UserRepository {
         Validators.validate(Validators.USERNAME_VALIDATOR, user.getUsername());
         Validators.validate(Validators.EMAIL_VALIDATOR, user.getEmail());
 
+        String hashedPassword = PasswordHasher.hash(user.getPassword());
+
         String sql = "INSERT INTO users(username, email, password, type) VALUES (?, ?, ?, ?) RETURNING id";
         Connection conn = null;
 
@@ -40,7 +43,7 @@ public class UserRepository {
 
                 ps.setString(1, user.getUsername());
                 ps.setString(2, user.getEmail());
-                ps.setString(3, user.getPassword());
+                ps.setString(3, hashedPassword); // Folosim parola criptată
                 ps.setString(4, (user instanceof Duck) ? "DUCK" : "PERSON");
 
                 try (ResultSet rs = ps.executeQuery()) {
@@ -53,7 +56,6 @@ public class UserRepository {
                     }
                 }
             }
-
 
             User result;
             if (user instanceof Person p) {
@@ -115,6 +117,36 @@ public class UserRepository {
         return null;
     }
 
+    public User findByEmail(String email) {
+        String sql = "SELECT id FROM users WHERE email = ?";
+        try (Connection conn = Database.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+                Long id = rs.getLong("id");
+                return findById(id);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding user by email " + email, e);
+        }
+    }
+
+    public User findByUsername(String username) {
+        String sql = "SELECT id FROM users WHERE username = ?";
+        try (Connection conn = Database.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (!rs.next()) return null;
+                Long id = rs.getLong("id");
+                return findById(id);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding user by username " + username, e);
+        }
+    }
+
     public List<User> findAll() {
         List<User> users = new ArrayList<>();
         users.addAll(personRepo.findAll());
@@ -126,15 +158,12 @@ public class UserRepository {
 
     public boolean existsById(Long id) {
         String sql = "SELECT 1 FROM users WHERE id = ?";
-
         try (Connection conn = Database.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setLong(1, id);
             try (ResultSet rs = ps.executeQuery()) {
                 return rs.next();
             }
-
         } catch (SQLException e) {
             throw new RuntimeException("Failed to check user existence for id " + id, e);
         }

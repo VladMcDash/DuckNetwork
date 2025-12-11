@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="CENTER" spacing="15.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ducknetwork.gui.LoginController" prefWidth="300" prefHeight="250">
+    <padding>
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+    </padding>
+
+    <Label text="Duck Network Login" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+
+    <TextField fx:id="txtUsername" promptText="Username" />
+    <PasswordField fx:id="txtPassword" promptText="Parola" />
+
+    <Button text="Autentificare" onAction="#handleLogin" maxWidth="Infinity" style="-fx-background-color: #2196F3; -fx-text-fill: white;" />
+
+    <Label fx:id="lblError" textFill="red" wrapText="true" />
+</VBox>

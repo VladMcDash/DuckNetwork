@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.Priority?>
+
+<VBox xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ducknetwork.gui.ChatController" prefWidth="400" prefHeight="500">
+    <ListView fx:id="messageList" VBox.vgrow="ALWAYS" />
+
+    <HBox spacing="10" style="-fx-padding: 10;">
+        <TextArea fx:id="inputMessage" prefHeight="50" HBox.hgrow="ALWAYS" promptText="Scrie un mesaj..." wrapText="true"/>
+        <Button text="Trimite" onAction="#handleSendMessage" prefHeight="50"/>
+    </HBox>
+</VBox>

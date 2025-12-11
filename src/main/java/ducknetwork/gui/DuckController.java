@@ -4,19 +4,26 @@ import ducknetwork.domain.*;
 import ducknetwork.service.NetworkService;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class DuckController {
 
     private final NetworkService service = new NetworkService();
+    private User loggedUser; // NOU: Userul logat
 
+    // --- ELEMENTE TAB 1: PAGINARE ---
     private int currentPage = 1;
     private final int pageSize = 10;
     private String currentFilterType = "TOATE";
@@ -29,11 +36,12 @@ public class DuckController {
     @FXML private TableColumn<Duck, Double> tableColumnSpeed;
     @FXML private TableColumn<Duck, Double> tableColumnEndurance;
 
-    @FXML private ComboBox<String> comboBoxFilterType;
+    @FXML private ComboBox<String> comboBoxDuckFilterType;
     @FXML private Button prevButton;
     @FXML private Button nextButton;
     @FXML private Label pageInfoLabel;
 
+    // --- ELEMENTE TAB 2: ADMINISTRARE ---
     @FXML private TextField txtUsername;
     @FXML private TextField txtEmail;
     @FXML private TextField txtPassword;
@@ -49,12 +57,18 @@ public class DuckController {
     @FXML private VBox duckFieldsContainer;
     @FXML private TextField txtSpeed;
     @FXML private TextField txtEndurance;
-    @FXML private ComboBox<String> comboDuckType;
+    @FXML private ComboBox<String> comboDuckCreationType;
 
-    @FXML private TextField txtDeleteId;
-    @FXML private ComboBox<Long> comboUser1;
-    @FXML private ComboBox<Long> comboUser2;
+    @FXML private TextField txtDeleteEmail;
+    @FXML private ComboBox<String> comboUser1Email;
+    @FXML private ComboBox<String> comboUser2Email;
     @FXML private Label lblStatus;
+
+    @FXML private TableView<FriendshipDTO> friendshipTable;
+    @FXML private TableColumn<FriendshipDTO, String> colUser1Email;
+    @FXML private TableColumn<FriendshipDTO, String> colUser2Email;
+
+    @FXML private Button btnOpenChat;
 
     @FXML private Label lblCommunityCount;
     @FXML private TextArea txtMostSociable;
@@ -66,6 +80,10 @@ public class DuckController {
         initAdministrationTab();
     }
 
+    public void setLoggedUser(User user) {
+        this.loggedUser = user;
+    }
+
     private void initPaginationTab() {
         tableColumnId.setCellValueFactory(new PropertyValueFactory<>("id"));
         tableColumnUsername.setCellValueFactory(new PropertyValueFactory<>("username"));
@@ -74,10 +92,16 @@ public class DuckController {
         tableColumnSpeed.setCellValueFactory(new PropertyValueFactory<>("speed"));
         tableColumnEndurance.setCellValueFactory(new PropertyValueFactory<>("endurance"));
 
-        comboBoxFilterType.getItems().addAll("TOATE", "SWIMMING", "FLYING", "FLYING_AND_SWIMMING");
-        comboBoxFilterType.getSelectionModel().select(currentFilterType);
+        List<String> duckTypes = Arrays.stream(DuckType.values())
+                .map(Enum::toString)
+                .collect(Collectors.toList());
 
-        comboBoxFilterType.valueProperty().addListener((observable, oldValue, newValue) -> {
+        comboBoxDuckFilterType.getItems().add("TOATE");
+        comboBoxDuckFilterType.getItems().addAll(duckTypes);
+
+        comboBoxDuckFilterType.getSelectionModel().select(currentFilterType);
+
+        comboBoxDuckFilterType.valueProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue != null && !newValue.equals(currentFilterType)) {
                 currentFilterType = newValue;
                 currentPage = 1;
@@ -92,44 +116,41 @@ public class DuckController {
         try {
             Page<Duck> duckPage = service.getDucksPage(currentFilterType, currentPage, pageSize);
             tableView.setItems(FXCollections.observableArrayList(duckPage.getContent()));
-
-            pageInfoLabel.setText(String.format("Pagina %d din %d (Total rate: %d)",
-                    duckPage.getCurrentPage(),
-                    duckPage.getTotalPages(),
-                    duckPage.getTotalElements()));
-            prevButton.setDisable(duckPage.getCurrentPage() <= 1);
-            nextButton.setDisable(duckPage.getCurrentPage() >= duckPage.getTotalPages());
+            updatePaginationControls(duckPage);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @FXML private void handlePrevPage() {
-        if (currentPage > 1) {
-            currentPage--;
-            loadDucksPage();
-        }
+    private void updatePaginationControls(Page<Duck> page) {
+        pageInfoLabel.setText(String.format("Pagina %d din %d (Total: %d)",
+                page.getCurrentPage(),
+                page.getTotalPages(),
+                page.getTotalElements()));
+        prevButton.setDisable(page.getCurrentPage() <= 1);
+        nextButton.setDisable(page.getCurrentPage() >= page.getTotalPages());
     }
 
-    @FXML private void handleNextPage() {
-        currentPage++;
-        loadDucksPage();
-    }
-//2
+    @FXML private void handlePrevPage() { if (currentPage > 1) { currentPage--; loadDucksPage(); } }
+    @FXML private void handleNextPage() { currentPage++; loadDucksPage(); }
+
     private void initAdministrationTab() {
         comboUserType.getItems().addAll("PERSON", "DUCK");
-        comboDuckType.getItems().addAll("SWIMMING", "FLYING", "FLYING_AND_SWIMMING");
+        List<String> duckTypes = Arrays.stream(DuckType.values()).map(Enum::toString).collect(Collectors.toList());
+        comboDuckCreationType.getItems().addAll(duckTypes);
 
         comboUserType.valueProperty().addListener((obs, oldVal, newVal) -> {
             boolean isDuck = "DUCK".equals(newVal);
             boolean isPerson = "PERSON".equals(newVal);
+            duckFieldsContainer.setVisible(isDuck); duckFieldsContainer.setManaged(isDuck);
+            personFieldsContainer.setVisible(isPerson); personFieldsContainer.setManaged(isPerson);
+        });
 
-            duckFieldsContainer.setVisible(isDuck);
-            duckFieldsContainer.setManaged(isDuck);
+        colUser1Email.setCellValueFactory(new PropertyValueFactory<>("user1Email"));
+        colUser2Email.setCellValueFactory(new PropertyValueFactory<>("user2Email"));
 
-            personFieldsContainer.setVisible(isPerson);
-            personFieldsContainer.setManaged(isPerson);
-
+        friendshipTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            btnOpenChat.setDisable(newVal == null);
         });
 
         refreshUserLists();
@@ -138,13 +159,17 @@ public class DuckController {
     private void refreshUserLists() {
         try {
             List<User> users = service.listAllUsers();
-            List<Long> ids = users.stream().map(User::getId).collect(Collectors.toList());
-            comboUser1.setItems(FXCollections.observableArrayList(ids));
-            comboUser2.setItems(FXCollections.observableArrayList(ids));
+            List<String> emails = users.stream().map(User::getEmail).collect(Collectors.toList());
+            comboUser1Email.setItems(FXCollections.observableArrayList(emails));
+            comboUser2Email.setItems(FXCollections.observableArrayList(emails));
 
-            txtDeleteId.clear();
+            List<FriendshipDTO> friendships = service.listAllFriendships();
+            friendshipTable.setItems(FXCollections.observableArrayList(friendships));
+
+            txtDeleteEmail.clear();
+            lblStatus.setText("Asteptare...");
         } catch (Exception e) {
-            System.err.println("Nu s-au putut incarca utilizatorii pentru combobox: " + e.getMessage());
+            System.err.println("Eroare incarcare date: " + e.getMessage());
         }
     }
 
@@ -157,7 +182,7 @@ public class DuckController {
             String password = txtPassword.getText();
 
             if (username.isEmpty() || type == null) {
-                lblStatus.setText("Eroare: Username/Tip sunt empty!");
+                lblStatus.setText("Eroare: Username si Tip sunt obligatorii!");
                 return;
             }
 
@@ -165,114 +190,100 @@ public class DuckController {
             Long tempId = null;
 
             if ("DUCK".equals(type)) {
-                String duckType = comboDuckType.getValue();
+                String duckType = comboDuckCreationType.getValue();
                 double speed = Double.parseDouble(txtSpeed.getText());
                 double endurance = Double.parseDouble(txtEndurance.getText());
+                if (duckType == null) throw new IllegalArgumentException("Tipul ratei obligatoriu");
 
-                if ("SWIMMING".equals(duckType)) {
-                    newUser = new SwimmingDuck(tempId, username, email, password, speed, endurance);
-                } else if ("FLYING".equals(duckType)) {
-                    newUser = new FlyingDuck(tempId, username, email, password, speed, endurance);
-                } else {
-                    newUser = new FlyingAndSwimmingDuck(tempId, username, email, password, speed, endurance);
-                }
+                if ("SWIMMING".equals(duckType)) newUser = new SwimmingDuck(tempId, username, email, password, speed, endurance);
+                else if ("FLYING".equals(duckType)) newUser = new FlyingDuck(tempId, username, email, password, speed, endurance);
+                else newUser = new FlyingAndSwimmingDuck(tempId, username, email, password, speed, endurance);
             } else if ("PERSON".equals(type)) {
                 String firstName = txtFirstName.getText();
                 String lastName = txtLastName.getText();
                 String occupation = txtOccupation.getText();
-
-                LocalDate birthDate;
-                try {
-                    birthDate = LocalDate.parse(txtBirthDate.getText(), DateTimeFormatter.ISO_DATE);
-                } catch (Exception e) {
-                    lblStatus.setText("Eroare: Data Nasterii trebuie sa fie in format YYYY-MM-DD.");
-                    return;
-                }
-
-                int empathy;
-                try {
-                    empathy = Integer.parseInt(txtEmpathy.getText());
-                } catch (NumberFormatException e) {
-                    lblStatus.setText("Eroare: Empathy trebuie sa fie un int.");
-                    return;
-                }
-
-                newUser = new Person(tempId, username, email, password,
-                        firstName, lastName, birthDate,
-                        occupation, empathy);
+                LocalDate birthDate = LocalDate.parse(txtBirthDate.getText(), DateTimeFormatter.ISO_DATE);
+                int empathy = Integer.parseInt(txtEmpathy.getText());
+                newUser = new Person(tempId, username, email, password, firstName, lastName, birthDate, occupation, empathy);
             } else {
-                lblStatus.setText("Eroare: Tipul de utilizator nu este valid.");
                 return;
             }
-
             service.addUser(newUser);
-            lblStatus.setText("Succes: Utilizator " + username + " adaugat!");
-
-            refreshUserLists();
-            loadDucksPage();
-            clearAddForm();
-
-        } catch (NumberFormatException e) {
-            lblStatus.setText("Eroare de format numeric.");
-            e.printStackTrace();
+            lblStatus.setText("Succes adaugare: " + username);
+            refreshUserLists(); loadDucksPage(); clearAddForm();
         } catch (Exception e) {
-            lblStatus.setText("Eroare la adaugare: " + e.getMessage());
-            e.printStackTrace();
+            lblStatus.setText("Eroare: " + e.getMessage());
         }
     }
 
     @FXML
     private void handleDeleteUser() {
         try {
-            String idStr = txtDeleteId.getText();
-            if (idStr.isEmpty()) {
-                lblStatus.setText("Introdu ID-ul utilizatorului de sters.");
-                return;
-            }
-            Long id = Long.parseLong(idStr);
-            service.removeUser(id);
-
-            lblStatus.setText("Succes: Utilizator " + id + " sters.");
-            refreshUserLists();
-            loadDucksPage();
+            String email = txtDeleteEmail.getText();
+            if (email.isEmpty()) return;
+            service.removeUserByEmail(email);
+            lblStatus.setText("Succes stergere: " + email);
+            refreshUserLists(); loadDucksPage();
         } catch (Exception e) {
-            lblStatus.setText("Eroare la stergere: " + e.getMessage());
+            lblStatus.setText("Eroare: " + e.getMessage());
         }
     }
 
     @FXML
     private void handleAddFriend() {
         try {
-            Long id1 = comboUser1.getValue();
-            Long id2 = comboUser2.getValue();
-
-            if (id1 == null || id2 == null) {
-                lblStatus.setText("Selecteaza ambii utilizatori!");
-                return;
-            }
-
-            service.addFriend(id1, id2);
-            lblStatus.setText("Succes: Prietenie creata intre " + id1 + " si " + id2);
+            String email1 = comboUser1Email.getValue();
+            String email2 = comboUser2Email.getValue();
+            if (email1 == null || email2 == null) return;
+            service.addFriendByEmails(email1, email2);
+            lblStatus.setText("Prietenie creata!");
+            refreshUserLists();
         } catch (Exception e) {
-            lblStatus.setText("Eroare prietenie: " + e.getMessage());
+            lblStatus.setText("Eroare: " + e.getMessage());
         }
     }
 
     @FXML
     private void handleRemoveFriend() {
         try {
-            Long id1 = comboUser1.getValue();
-            Long id2 = comboUser2.getValue();
-
-            if (id1 == null || id2 == null) {
-                lblStatus.setText("Selecteaza ambii utilizatori!");
-                return;
-            }
-
-            service.removeFriend(id1, id2);
-            lblStatus.setText("Succes: Prietenie stearsa intre " + id1 + " si " + id2);
+            String email1 = comboUser1Email.getValue();
+            String email2 = comboUser2Email.getValue();
+            if (email1 == null || email2 == null) return;
+            service.removeFriendByEmails(email1, email2);
+            lblStatus.setText("Prietenie stearsa!");
+            refreshUserLists();
         } catch (Exception e) {
-            lblStatus.setText("Eroare stergere prietenie: " + e.getMessage());
+            lblStatus.setText("Eroare: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void handleOpenChat() {
+        FriendshipDTO selected = friendshipTable.getSelectionModel().getSelectedItem();
+        if (selected != null && loggedUser != null) {
+            try {
+                String partnerEmail = selected.getUser1Email().equals(loggedUser.getEmail())
+                        ? selected.getUser2Email()
+                        : selected.getUser1Email();
+
+                User partner = service.findUserByEmail(partnerEmail);
+
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/ChatView.fxml"));
+                Stage stage = new Stage();
+                stage.setScene(new Scene(loader.load()));
+
+                ChatController chatCtrl = loader.getController();
+                chatCtrl.setChatData(loggedUser, partner);
+
+                stage.setTitle("Chat cu " + partner.getUsername());
+                stage.show();
+
+            } catch (Exception e) {
+                lblStatus.setText("Eroare deschidere chat: " + e.getMessage());
+                e.printStackTrace();
+            }
+        } else {
+            lblStatus.setText("Selecteaza o prietenie si asigura-te ca esti logat!");
         }
     }
 
@@ -282,27 +293,24 @@ public class DuckController {
         txtOccupation.clear(); txtEmpathy.clear();
         txtSpeed.clear(); txtEndurance.clear();
     }
-//3
+
     @FXML
     private void handleCalculateStats() {
         try {
             int communities = service.numberOfCommunities();
             lblCommunityCount.setText(String.valueOf(communities));
-
             List<User> socialCommunity = service.mostSociableCommunity();
             if (socialCommunity.isEmpty()) {
                 txtMostSociable.setText("Nu exista comunitati.");
             } else {
                 StringBuilder sb = new StringBuilder();
                 for (User u : socialCommunity) {
-                    sb.append(u.getUsername())
-                            .append(" (ID: ").append(u.getId()).append(")\n");
+                    sb.append(u.getUsername()).append(" (ID: ").append(u.getId()).append(")\n");
                 }
                 txtMostSociable.setText(sb.toString());
             }
-
         } catch (Exception e) {
-            txtMostSociable.setText("Eroare la calcul statistici: " + e.getMessage());
+            txtMostSociable.setText("Eroare: " + e.getMessage());
         }
     }
 }

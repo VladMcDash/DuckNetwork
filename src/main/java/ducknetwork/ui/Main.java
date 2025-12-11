@@ -50,8 +50,8 @@ public class Main {
                     case "addperson": addPerson(); break;
                     case "addduck": addDuck(); break;
                     case "removeuser": removeUser(); break;
-                    case "addfriend": addFriend(); break;
-                    case "removefriend": removeFriend(); break;
+                    //case "addfriend": addFriend(); break;
+                    //case "removefriend": removeFriend(); break;
                     case "list": listUsers(); break;
                     case "mostsociable": showMostSociable(); break;
                     case "createcard": createCard(); break;
@@ -141,19 +141,19 @@ public class Main {
         System.out.println("Removed user " + id);
     }
 
-    private static void addFriend() {
-        System.out.print("id1: "); Long a = Long.parseLong(sc.nextLine().trim());
-        System.out.print("id2: "); Long b = Long.parseLong(sc.nextLine().trim());
-        service.addFriend(a, b);
-        System.out.println("Friendship added.");
-    }
+//    private static void addFriend() {
+//        System.out.print("id1: "); Long a = Long.parseLong(sc.nextLine().trim());
+//        System.out.print("id2: "); Long b = Long.parseLong(sc.nextLine().trim());
+//        service.addFriend(a, b);
+//        System.out.println("Friendship added.");
+//    }
 
-    private static void removeFriend() {
-        System.out.print("id1: "); Long a = Long.parseLong(sc.nextLine().trim());
-        System.out.print("id2: "); Long b = Long.parseLong(sc.nextLine().trim());
-        service.removeFriend(a, b);
-        System.out.println("Friendship removed.");
-    }
+//    private static void removeFriend() {
+//        System.out.print("id1: "); Long a = Long.parseLong(sc.nextLine().trim());
+//        System.out.print("id2: "); Long b = Long.parseLong(sc.nextLine().trim());
+//        service.removeFriend(a, b);
+//        System.out.println("Friendship removed.");
+//    }
 
     private static void listUsers() {
         List<User> all = service.listAllUsers();
