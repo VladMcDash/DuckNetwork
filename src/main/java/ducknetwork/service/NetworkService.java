@@ -34,7 +34,7 @@ public class NetworkService {
 
     private final List<Observer> observers = new ArrayList<>();
 
-    private NetworkService() {} // Constructor privat
+    private NetworkService() {}
 
     public void addObserver(Observer o) { observers.add(o); }
     public void removeObserver(Observer o) { observers.remove(o); }
@@ -48,38 +48,7 @@ public class NetworkService {
         return user;
     }
 
-    // --- MESSAGES ---
-    public void sendMessage(Long fromUserId, List<String> toEmails, String text, Message replyTo) {
-        User from = findById(fromUserId);
-        List<User> recipients = toEmails.stream()
-                .map(this::findUserByEmail)
-                .collect(Collectors.toList());
-
-        Message msg;
-        if (replyTo != null) {
-            msg = new ReplyMessage(null, from, recipients, text, LocalDateTime.now(), replyTo);
-        } else {
-            msg = new Message(null, from, recipients, text, LocalDateTime.now());
-        }
-        messageRepo.save(msg);
-        notifyObservers();
-    }
-
-    public List<Message> getConversation(Long user1Id, Long user2Id) {
-        return messageRepo.findConversation(user1Id, user2Id);
-    }
-
-    // --- FRIEND REQUESTS (CORRECTED) ---
-    public List<FriendRequestDTO> getAllUserRequests(Long userId) {
-        return requestRepo.findAllRequestsForUser(userId, userRepo);
-    }
-
-    public long getPendingRequestsCount(Long userId) {
-        return getAllUserRequests(userId).stream()
-                .filter(r -> r.getFromEmail().startsWith("RECEIVED FROM:") && r.getStatus() == FriendshipStatus.PENDING)
-                .count();
-    }
-
+    // --- FRIEND REQUESTS ---
     public void sendFriendRequest(String fromEmail, String toEmail) {
         User from = findUserByEmail(fromEmail);
         User to = findUserByEmail(toEmail);
@@ -90,7 +59,6 @@ public class NetworkService {
     public void acceptFriendRequest(String fromEmail, String toEmail) {
         User from = findUserByEmail(fromEmail);
         User to = findUserByEmail(toEmail);
-        // FIX: Trimitem direct Enum-ul, nu .name()
         requestRepo.updateStatus(from.getId(), to.getId(), FriendshipStatus.APPROVED);
         friendRepo.addFriend(from.getId(), to.getId());
         notifyObservers();
@@ -99,9 +67,75 @@ public class NetworkService {
     public void rejectFriendRequest(String fromEmail, String toEmail) {
         User from = findUserByEmail(fromEmail);
         User to = findUserByEmail(toEmail);
-        // FIX: Trimitem direct Enum-ul, nu .name()
         requestRepo.updateStatus(from.getId(), to.getId(), FriendshipStatus.REJECTED);
         notifyObservers();
+    }
+
+    public long getPendingRequestsCount(Long userId) {
+        return getAllUserRequests(userId).stream()
+                .filter(r -> r.getFromEmail().startsWith("RECEIVED FROM:") &&
+                        r.getStatus() == FriendshipStatus.PENDING)
+                .count();
+    }
+
+    public List<FriendRequestDTO> getAllUserRequests(Long userId) {
+        return requestRepo.findAllRequestsForUser(userId, userRepo);
+    }
+
+    // --- MESSAGES & RECENT CHATS ---
+    public void sendMessage(Long fromUserId, List<String> toEmails, String text, Message replyTo) {
+        User from = findById(fromUserId);
+        List<User> recipients = toEmails.stream().map(this::findUserByEmail).collect(Collectors.toList());
+        Message msg = (replyTo != null) ? new ReplyMessage(null, from, recipients, text, LocalDateTime.now(), replyTo)
+                : new Message(null, from, recipients, text, LocalDateTime.now());
+        messageRepo.save(msg);
+        notifyObservers();
+    }
+
+    public List<Message> getConversation(Long u1, Long u2) {
+        return messageRepo.findConversation(u1, u2);
+    }
+
+    /**
+     * Returnează numărul total de mesaje primite de utilizator (pentru detectarea mesajelor noi).
+     */
+    public long getTotalMessagesReceivedCount(Long userId) {
+        String sql = "SELECT COUNT(*) FROM message_recipients WHERE to_user_id = ?";
+        try (Connection conn = Database.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getLong(1);
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return 0;
+    }
+
+    public List<User> getRecentChatPartners(Long userId) {
+        List<User> partners = new ArrayList<>();
+        // Interogare SQL pentru a extrage ID-urile partenerilor de chat (atât expeditori cât și destinatari)
+        String sql = "SELECT partner_id FROM (" +
+                "  SELECT mr.to_user_id AS partner_id, MAX(m.date_sent) as last_date " +
+                "  FROM messages m JOIN message_recipients mr ON m.id = mr.message_id " +
+                "  WHERE m.from_user_id = ? GROUP BY mr.to_user_id " +
+                "  UNION " +
+                "  SELECT m.from_user_id AS partner_id, MAX(m.date_sent) as last_date " +
+                "  FROM messages m JOIN message_recipients mr ON m.id = mr.message_id " +
+                "  WHERE mr.to_user_id = ? GROUP BY m.from_user_id" +
+                ") AS combined GROUP BY partner_id ORDER BY MAX(last_date) DESC";
+
+        try (Connection conn = Database.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setLong(1, userId);
+            ps.setLong(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    User p = userRepo.findById(rs.getLong("partner_id"));
+                    if (p != null) partners.add(p);
+                }
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+        return partners;
     }
 
     // --- UTILS ---
@@ -118,18 +152,17 @@ public class NetworkService {
     }
 
     public List<User> listAllUsers() { return userRepo.findAll(); }
+
     public List<FriendshipDTO> listAllFriendships() {
-        List<User> allUsers = userRepo.findAll();
+        List<User> all = userRepo.findAll();
         List<FriendshipDTO> friendships = new ArrayList<>();
-        Set<String> processedPairs = new HashSet<>();
-        for (User u : allUsers) {
-            String e1 = u.getEmail();
+        Set<String> processed = new HashSet<>();
+        for (User u : all) {
             for (Long fid : friendRepo.getFriendIds(u.getId())) {
                 User f = userRepo.findById(fid);
                 if (f == null) continue;
-                String e2 = f.getEmail();
-                String pair = e1.compareTo(e2) < 0 ? e1 + "-" + e2 : e2 + "-" + e1;
-                if (processedPairs.add(pair)) friendships.add(new FriendshipDTO(e1, e2));
+                String pair = u.getEmail().compareTo(f.getEmail()) < 0 ? u.getEmail() + "-" + f.getEmail() : f.getEmail() + "-" + u.getEmail();
+                if (processed.add(pair)) friendships.add(new FriendshipDTO(u.getEmail(), f.getEmail()));
             }
         }
         return friendships;
@@ -154,37 +187,16 @@ public class NetworkService {
         return u;
     }
 
-    public Page<Duck> getDucksPage(String type, int page, int size) {
-        return duckRepo.findPage(type, page, size);
-    }
-
-    public List<User> getRecentChatPartners(Long userId) {
-        List<User> partners = new ArrayList<>();
-        String sql = "SELECT DISTINCT CASE WHEN from_user_id = ? THEN mr.to_user_id ELSE from_user_id END as partner_id " +
-                "FROM messages m JOIN message_recipients mr ON m.id = mr.message_id " +
-                "WHERE from_user_id = ? OR mr.to_user_id = ?";
-        try (Connection conn = Database.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setLong(1, userId); ps.setLong(2, userId); ps.setLong(3, userId);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    User p = userRepo.findById(rs.getLong("partner_id"));
-                    if (p != null) partners.add(p);
-                }
-            }
-        } catch (SQLException e) { e.printStackTrace(); }
-        return partners;
-    }
+    public Page<Duck> getDucksPage(String type, int page, int size) { return duckRepo.findPage(type, page, size); }
 
     public int numberOfCommunities() { return getCommunities().size(); }
+
     public List<List<User>> getCommunities() {
         List<User> all = userRepo.findAll();
         Map<Long, User> byId = all.stream().collect(Collectors.toMap(User::getId, u -> u));
         Set<Long> visited = new HashSet<>();
         List<List<User>> components = new ArrayList<>();
-        for (User u : all) {
-            if (!visited.contains(u.getId())) components.add(bfsCollect(u.getId(), visited, byId));
-        }
+        for (User u : all) { if (!visited.contains(u.getId())) components.add(bfsCollect(u.getId(), visited, byId)); }
         return components;
     }
 
@@ -197,9 +209,7 @@ public class NetworkService {
             User u = byId.get(cur);
             if (u != null) {
                 comp.add(u);
-                for (Long fid : friendRepo.getFriendIds(cur)) {
-                    if (!visited.contains(fid)) { visited.add(fid); q.add(fid); }
-                }
+                for (Long fid : friendRepo.getFriendIds(cur)) { if (!visited.contains(fid)) { visited.add(fid); q.add(fid); } }
             }
         }
         return comp;

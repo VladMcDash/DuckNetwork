@@ -11,6 +11,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.util.stream.Collectors;
 public class DuckController implements Observer {
     private final NetworkService service = NetworkService.getInstance();
     private User loggedUser;
+    private long lastPendingCount = 0;
 
     private int currentPage = 1;
     private final int pageSize = 10;
@@ -40,7 +42,8 @@ public class DuckController implements Observer {
     @FXML private PasswordField txtPassword;
     @FXML private ComboBox<String> comboUserType, comboDuckCreationType;
     @FXML private VBox personFieldsContainer, duckFieldsContainer;
-    @FXML private Label lblStatus, lblChatStatus, lblFriendStatus, lblNotificari, lblNotificationBadge;
+    @FXML private Label lblStatus, lblChatStatus, lblFriendStatus, lblNotificari;
+    @FXML private Circle dotNewNotifications;
     @FXML private TableView<FriendshipDTO> friendshipTable;
     @FXML private TableColumn<FriendshipDTO, String> colUser1Email, colUser2Email;
     @FXML private ComboBox<String> comboUser1Email, comboUser2Email;
@@ -49,9 +52,6 @@ public class DuckController implements Observer {
 
     private List<User> recentPartners;
     private User lastSearchedUser;
-
-    @FXML private Label lblCommunityCount;
-    @FXML private TextArea txtMostSociable;
 
     @FXML
     public void initialize() {
@@ -62,6 +62,7 @@ public class DuckController implements Observer {
 
     public void setLoggedUser(User user) {
         this.loggedUser = user;
+        this.lastPendingCount = service.getPendingRequestsCount(user.getId());
         service.addObserver(this);
         update();
     }
@@ -69,21 +70,31 @@ public class DuckController implements Observer {
     @Override
     public void update() {
         Platform.runLater(() -> {
+            long currentPendingCount = service.getPendingRequestsCount(loggedUser.getId());
+
+            // Verificăm dacă a apărut o cerere NOUĂ de prietenie pentru pop-up
+            if (currentPendingCount > lastPendingCount) {
+                Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                alert.setTitle("Notificare");
+                alert.setHeaderText(null);
+                alert.setContentText("Ai primit o cerere de prietenie nouă!");
+                alert.show();
+            }
+            lastPendingCount = currentPendingCount;
+
+            // Refresh general interfață
             refreshNotifications();
             refreshRecentChats();
             refreshUserLists();
             loadDucksPage();
-        });
-    }
 
-    private void updateNotificationUI() {
-        if (loggedUser == null) return;
-        long count = service.getPendingRequestsCount(loggedUser.getId());
-        if (lblNotificari != null) lblNotificari.setText(count > 0 ? "Notificari (" + count + ")" : "Notificari");
-        if (lblNotificationBadge != null) {
-            lblNotificationBadge.setText(String.valueOf(count));
-            lblNotificationBadge.setVisible(count > 0);
-        }
+            if (lblNotificari != null) {
+                lblNotificari.setText(currentPendingCount > 0 ? "Notificari (" + currentPendingCount + ")" : "Notificari");
+            }
+            if (dotNewNotifications != null) {
+                dotNewNotifications.setVisible(currentPendingCount > 0);
+            }
+        });
     }
 
     @FXML
@@ -94,8 +105,15 @@ public class DuckController implements Observer {
             listNotifications.setItems(FXCollections.observableArrayList(
                     reqs.stream().map(r -> r.getFromEmail() + " | Status: " + r.getStatus() + " | Data: " + r.getDate().format(DateTimeFormatter.ofPattern("dd-MM HH:mm"))).toList()
             ));
-            updateNotificationUI();
         } catch (Exception e) { e.printStackTrace(); }
+    }
+
+    @FXML public void refreshRecentChats() {
+        if (loggedUser == null) return;
+        recentPartners = service.getRecentChatPartners(loggedUser.getId());
+        listRecentChats.setItems(FXCollections.observableArrayList(
+                recentPartners.stream().map(User::getEmail).toList()
+        ));
     }
 
     @FXML
@@ -105,7 +123,6 @@ public class DuckController implements Observer {
             try {
                 String fromEmail = sel.substring(sel.indexOf("FROM: ") + 6, sel.indexOf(" |")).trim();
                 service.acceptFriendRequest(fromEmail, loggedUser.getEmail());
-                lblChatStatus.setText("✅ Cerere acceptata!");
             } catch (Exception e) { lblChatStatus.setText("❌ " + e.getMessage()); }
         }
     }
@@ -117,7 +134,6 @@ public class DuckController implements Observer {
             try {
                 String fromEmail = sel.substring(sel.indexOf("FROM: ") + 6, sel.indexOf(" |")).trim();
                 service.rejectFriendRequest(fromEmail, loggedUser.getEmail());
-                lblChatStatus.setText("Cerere respinsa.");
             } catch (Exception e) { lblChatStatus.setText("❌ " + e.getMessage()); }
         }
     }
@@ -144,7 +160,7 @@ public class DuckController implements Observer {
     @FXML
     private void handleSearchAndChat() {
         String email = txtSearchChatEmail.getText().trim();
-        resetQuickRequestUI(); lblChatStatus.setText("");
+        resetQuickRequestUI();
         if (email.isEmpty()) return;
         try {
             User partner = service.findUserByEmail(email);
@@ -158,7 +174,7 @@ public class DuckController implements Observer {
                 if (areFriends) { lblFriendStatus.setVisible(true); lblFriendStatus.setManaged(true); }
                 else { btnQuickFriendRequest.setVisible(true); btnQuickFriendRequest.setManaged(true); btnQuickFriendRequest.setText("Invite " + partner.getUsername()); }
             }
-        } catch (Exception e) { lblChatStatus.setText("❌ Email negasit."); resetQuickRequestUI(); }
+        } catch (Exception e) { lblChatStatus.setText("❌ Email negasit."); }
     }
 
     @FXML
@@ -167,7 +183,7 @@ public class DuckController implements Observer {
             try {
                 service.sendFriendRequest(loggedUser.getEmail(), lastSearchedUser.getEmail());
                 lblChatStatus.setText("✅ Cerere trimisa!");
-                btnQuickFriendRequest.setVisible(false); btnQuickFriendRequest.setManaged(false);
+                resetQuickRequestUI();
             } catch (Exception e) { lblChatStatus.setText("❌ " + e.getMessage()); }
         }
     }
@@ -178,20 +194,20 @@ public class DuckController implements Observer {
         lastSearchedUser = null;
     }
 
-    @FXML public void refreshRecentChats() {
-        if (loggedUser == null) return;
-        recentPartners = service.getRecentChatPartners(loggedUser.getId());
-        listRecentChats.setItems(FXCollections.observableArrayList(recentPartners.stream().map(User::getEmail).toList()));
+    @FXML private void handleOpenRecentChat() {
+        int idx = listRecentChats.getSelectionModel().getSelectedIndex();
+        if (idx >= 0) openChatWindow(recentPartners.get(idx));
     }
-
-    @FXML private void handleOpenRecentChat() { int idx = listRecentChats.getSelectionModel().getSelectedIndex(); if (idx >= 0) openChatWindow(recentPartners.get(idx)); }
 
     private void openChatWindow(User partner) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/gui/ChatView.fxml"));
-            Stage stage = new Stage(); stage.setScene(new Scene(loader.load()));
-            ((ChatController)loader.getController()).setChatData(loggedUser, partner);
-            stage.setTitle("Chat cu " + partner.getUsername()); stage.show();
+            Stage stage = new Stage();
+            stage.setScene(new Scene(loader.load()));
+            ChatController ctrl = loader.getController();
+            ctrl.setChatData(loggedUser, partner);
+            stage.setTitle("Chat cu " + partner.getUsername());
+            stage.show();
         } catch (IOException e) { e.printStackTrace(); }
     }
 
@@ -208,7 +224,6 @@ public class DuckController implements Observer {
         comboBoxDuckFilterType.valueProperty().addListener((o, old, newVal) -> {
             if (newVal != null) { currentFilterType = newVal; currentPage = 1; loadDucksPage(); }
         });
-        loadDucksPage();
     }
 
     private void loadDucksPage() {
@@ -235,7 +250,6 @@ public class DuckController implements Observer {
         });
         colUser1Email.setCellValueFactory(new PropertyValueFactory<>("user1Email"));
         colUser2Email.setCellValueFactory(new PropertyValueFactory<>("user2Email"));
-        refreshUserLists();
     }
 
     @FXML
@@ -261,7 +275,6 @@ public class DuckController implements Observer {
 
     @FXML private void handleDeleteUser() { try { service.removeUserByEmail(txtDeleteEmail.getText()); } catch (Exception e) { lblStatus.setText(e.getMessage()); } }
     @FXML private void handleRemoveFriend() { FriendshipDTO sel = friendshipTable.getSelectionModel().getSelectedItem(); if (sel != null) service.removeFriendByEmails(sel.getUser1Email(), sel.getUser2Email()); }
-    @FXML private void handleCalculateStats() { try { lblCommunityCount.setText(String.valueOf(service.numberOfCommunities())); } catch (Exception e) {} }
 
     private void clearAddForm() {
         txtUsername.clear(); txtEmail.clear(); txtPassword.clear(); txtFirstName.clear(); txtLastName.clear(); txtBirthDate.clear(); txtOccupation.clear(); txtEmpathy.clear(); txtSpeed.clear(); txtEndurance.clear();
