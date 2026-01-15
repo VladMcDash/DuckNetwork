@@ -1,6 +1,7 @@
 package ducknetwork.repository;
 
 import ducknetwork.domain.FriendRequestDTO;
+import ducknetwork.domain.FriendshipStatus;
 import ducknetwork.persistence.Database;
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -17,8 +18,8 @@ public class FriendRequestRepository {
             psCheck.setLong(2, toId);
             try (ResultSet rs = psCheck.executeQuery()) {
                 if (rs.next()) {
-                    if ("REJECTED".equals(rs.getString("status"))) {
-                        updateStatus(fromId, toId, "PENDING");
+                    if (FriendshipStatus.REJECTED.name().equals(rs.getString("status"))) {
+                        updateStatus(fromId, toId, FriendshipStatus.PENDING);
                         return;
                     } else {
                         throw new RuntimeException("Exista deja o cerere activa!");
@@ -35,11 +36,11 @@ public class FriendRequestRepository {
         } catch (SQLException e) { throw new RuntimeException(e); }
     }
 
-    public void updateStatus(Long fromId, Long toId, String status) {
+    public void updateStatus(Long fromId, Long toId, FriendshipStatus status) {
         String sql = "UPDATE friend_requests SET status = ? WHERE from_user_id = ? AND to_user_id = ?";
         try (Connection conn = Database.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, status);
+            ps.setString(1, status.name());
             ps.setLong(2, fromId);
             ps.setLong(3, toId);
             ps.executeUpdate();
@@ -57,15 +58,13 @@ public class FriendRequestRepository {
                 while (rs.next()) {
                     Long fromId = rs.getLong("from_user_id");
                     Long toId = rs.getLong("to_user_id");
-                    String status = rs.getString("status");
+                    FriendshipStatus status = FriendshipStatus.valueOf(rs.getString("status"));
                     LocalDateTime date = rs.getTimestamp("date_sent").toLocalDateTime();
 
-                    String label;
-                    if (fromId.equals(userId)) {
-                        label = "SENT TO: " + userRepo.findById(toId).getEmail();
-                    } else {
-                        label = "RECEIVED FROM: " + userRepo.findById(fromId).getEmail();
-                    }
+                    String label = fromId.equals(userId) ?
+                            "SENT TO: " + userRepo.findById(toId).getEmail() :
+                            "RECEIVED FROM: " + userRepo.findById(fromId).getEmail();
+
                     list.add(new FriendRequestDTO(label, status, date));
                 }
             }

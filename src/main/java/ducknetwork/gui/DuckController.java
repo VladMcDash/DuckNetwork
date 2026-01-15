@@ -2,6 +2,8 @@ package ducknetwork.gui;
 
 import ducknetwork.domain.*;
 import ducknetwork.service.NetworkService;
+import ducknetwork.util.Observer;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -18,9 +20,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class DuckController {
-
-    private final NetworkService service = new NetworkService();
+public class DuckController implements Observer {
+    private final NetworkService service = NetworkService.getInstance();
     private User loggedUser;
 
     private int currentPage = 1;
@@ -35,19 +36,16 @@ public class DuckController {
     @FXML private Button prevButton, nextButton;
     @FXML private Label pageInfoLabel;
 
-    @FXML private TextField txtUsername, txtEmail, txtFirstName, txtLastName, txtBirthDate, txtOccupation, txtEmpathy, txtSpeed, txtEndurance, txtDeleteEmail;
+    @FXML private TextField txtUsername, txtEmail, txtFirstName, txtLastName, txtBirthDate, txtOccupation, txtEmpathy, txtSpeed, txtEndurance, txtDeleteEmail, txtSearchChatEmail;
     @FXML private PasswordField txtPassword;
     @FXML private ComboBox<String> comboUserType, comboDuckCreationType;
     @FXML private VBox personFieldsContainer, duckFieldsContainer;
-    @FXML private Label lblStatus;
+    @FXML private Label lblStatus, lblChatStatus, lblFriendStatus, lblNotificari, lblNotificationBadge;
     @FXML private TableView<FriendshipDTO> friendshipTable;
     @FXML private TableColumn<FriendshipDTO, String> colUser1Email, colUser2Email;
     @FXML private ComboBox<String> comboUser1Email, comboUser2Email;
-
     @FXML private ListView<String> listNotifications, listRecentChats;
-    @FXML private TextField txtSearchChatEmail;
     @FXML private Button btnQuickFriendRequest;
-    @FXML private Label lblFriendStatus, lblChatStatus;
 
     private List<User> recentPartners;
     private User lastSearchedUser;
@@ -62,13 +60,30 @@ public class DuckController {
         resetQuickRequestUI();
     }
 
-    @FXML private Label lblNotificari;
-
     public void setLoggedUser(User user) {
         this.loggedUser = user;
-        refreshNotifications();
-        refreshRecentChats();
-        updateNotificationLabel();
+        service.addObserver(this);
+        update();
+    }
+
+    @Override
+    public void update() {
+        Platform.runLater(() -> {
+            refreshNotifications();
+            refreshRecentChats();
+            refreshUserLists();
+            loadDucksPage();
+        });
+    }
+
+    private void updateNotificationUI() {
+        if (loggedUser == null) return;
+        long count = service.getPendingRequestsCount(loggedUser.getId());
+        if (lblNotificari != null) lblNotificari.setText(count > 0 ? "Notificari (" + count + ")" : "Notificari");
+        if (lblNotificationBadge != null) {
+            lblNotificationBadge.setText(String.valueOf(count));
+            lblNotificationBadge.setVisible(count > 0);
+        }
     }
 
     @FXML
@@ -79,26 +94,39 @@ public class DuckController {
             listNotifications.setItems(FXCollections.observableArrayList(
                     reqs.stream().map(r -> r.getFromEmail() + " | Status: " + r.getStatus() + " | Data: " + r.getDate().format(DateTimeFormatter.ofPattern("dd-MM HH:mm"))).toList()
             ));
-
-            updateNotificationLabel();
+            updateNotificationUI();
         } catch (Exception e) { e.printStackTrace(); }
     }
 
-    private void updateNotificationLabel() {
-        if (loggedUser == null || lblNotificari == null) return;
-        long count = service.getPendingRequestsCount(loggedUser.getId());
-        lblNotificari.setText(count > 0 ? "Notificari (" + count + ")" : "Notificari");
+    @FXML
+    private void handleAcceptRequest() {
+        String sel = listNotifications.getSelectionModel().getSelectedItem();
+        if (sel != null && sel.contains("RECEIVED FROM:")) {
+            try {
+                String fromEmail = sel.substring(sel.indexOf("FROM: ") + 6, sel.indexOf(" |")).trim();
+                service.acceptFriendRequest(fromEmail, loggedUser.getEmail());
+                lblChatStatus.setText("✅ Cerere acceptata!");
+            } catch (Exception e) { lblChatStatus.setText("❌ " + e.getMessage()); }
+        }
+    }
+
+    @FXML
+    private void handleRejectRequest() {
+        String sel = listNotifications.getSelectionModel().getSelectedItem();
+        if (sel != null && sel.contains("RECEIVED FROM:")) {
+            try {
+                String fromEmail = sel.substring(sel.indexOf("FROM: ") + 6, sel.indexOf(" |")).trim();
+                service.rejectFriendRequest(fromEmail, loggedUser.getEmail());
+                lblChatStatus.setText("Cerere respinsa.");
+            } catch (Exception e) { lblChatStatus.setText("❌ " + e.getMessage()); }
+        }
     }
 
     @FXML
     private void handleAddFriend() {
         try {
-            String email1 = comboUser1Email.getValue();
-            String email2 = comboUser2Email.getValue();
-            if (email1 == null || email2 == null) { lblStatus.setText("Selecteaza utilizatorii!"); return; }
-            service.sendFriendRequest(email1, email2);
+            service.sendFriendRequest(comboUser1Email.getValue(), comboUser2Email.getValue());
             lblStatus.setText("Cerere trimisa!");
-            refreshNotifications();
         } catch (Exception e) { lblStatus.setText("Eroare: " + e.getMessage()); }
     }
 
@@ -114,42 +142,14 @@ public class DuckController {
     }
 
     @FXML
-    private void handleAcceptRequest() {
-        String sel = listNotifications.getSelectionModel().getSelectedItem();
-        if (sel != null && sel.contains("RECEIVED FROM:")) {
-            try {
-                String fromEmail = sel.substring(sel.indexOf("FROM: ") + 6, sel.indexOf(" |")).trim();
-                service.acceptFriendRequest(fromEmail, loggedUser.getEmail());
-                lblChatStatus.setText("✅ Cerere acceptata!");
-                refreshNotifications(); refreshUserLists();
-            } catch (Exception e) { lblChatStatus.setText("❌ " + e.getMessage()); }
-        } else if (sel != null) { lblChatStatus.setText("Nu poti accepta o cerere trimisa de tine."); }
-    }
-
-    @FXML
-    private void handleRejectRequest() {
-        String sel = listNotifications.getSelectionModel().getSelectedItem();
-        if (sel != null && sel.contains("RECEIVED FROM:")) {
-            try {
-                String fromEmail = sel.substring(sel.indexOf("FROM: ") + 6, sel.indexOf(" |")).trim();
-                service.rejectFriendRequest(fromEmail, loggedUser.getEmail());
-                lblChatStatus.setText("Cerere respinsa.");
-                refreshNotifications();
-            } catch (Exception e) { lblChatStatus.setText("❌ " + e.getMessage()); }
-        }
-    }
-
-
-    @FXML
     private void handleSearchAndChat() {
         String email = txtSearchChatEmail.getText().trim();
         resetQuickRequestUI(); lblChatStatus.setText("");
-        if (email.isEmpty()) { lblChatStatus.setText("Introdu email."); return; }
-        if (loggedUser != null && email.equals(loggedUser.getEmail())) { lblChatStatus.setText("Esti tu."); return; }
+        if (email.isEmpty()) return;
         try {
             User partner = service.findUserByEmail(email);
             if (partner != null) {
-                lastSearchedUser = partner; lblChatStatus.setText("✅ Gasit: " + partner.getUsername());
+                lastSearchedUser = partner;
                 openChatWindow(partner);
                 boolean areFriends = service.listAllFriendships().stream().anyMatch(f ->
                         (f.getUser1Email().equals(loggedUser.getEmail()) && f.getUser2Email().equals(partner.getEmail())) ||
@@ -168,7 +168,6 @@ public class DuckController {
                 service.sendFriendRequest(loggedUser.getEmail(), lastSearchedUser.getEmail());
                 lblChatStatus.setText("✅ Cerere trimisa!");
                 btnQuickFriendRequest.setVisible(false); btnQuickFriendRequest.setManaged(false);
-                refreshNotifications();
             } catch (Exception e) { lblChatStatus.setText("❌ " + e.getMessage()); }
         }
     }
@@ -179,8 +178,7 @@ public class DuckController {
         lastSearchedUser = null;
     }
 
-    @FXML
-    public void refreshRecentChats() {
+    @FXML public void refreshRecentChats() {
         if (loggedUser == null) return;
         recentPartners = service.getRecentChatPartners(loggedUser.getId());
         listRecentChats.setItems(FXCollections.observableArrayList(recentPartners.stream().map(User::getEmail).toList()));
@@ -196,18 +194,6 @@ public class DuckController {
             stage.setTitle("Chat cu " + partner.getUsername()); stage.show();
         } catch (IOException e) { e.printStackTrace(); }
     }
-    @FXML private Label lblNotificationBadge;
-
-    private void checkNewFriendRequests() {
-        long count = service.getPendingRequestsCount(loggedUser.getId());
-        if (count > 0) {
-            lblNotificationBadge.setText(String.valueOf(count));
-            lblNotificationBadge.setVisible(true);
-        } else {
-            lblNotificationBadge.setVisible(false);
-        }
-    }
-
 
     private void initPaginationTab() {
         tableColumnId.setCellValueFactory(new PropertyValueFactory<>("id"));
@@ -267,28 +253,14 @@ public class DuckController {
     private void handleAddUser() {
         try {
             User u;
-            if ("DUCK".equals(comboUserType.getValue())) {
-                u = new SwimmingDuck(null, txtUsername.getText(), txtEmail.getText(), txtPassword.getText(), Double.parseDouble(txtSpeed.getText()), Double.parseDouble(txtEndurance.getText()));
-            } else {
-                u = new Person(null, txtUsername.getText(), txtEmail.getText(), txtPassword.getText(), txtFirstName.getText(), txtLastName.getText(), LocalDate.parse(txtBirthDate.getText()), txtOccupation.getText(), Integer.parseInt(txtEmpathy.getText()));
-            }
-            service.addUser(u); lblStatus.setText("Succes!"); refreshUserLists(); loadDucksPage(); clearAddForm();
+            if ("DUCK".equals(comboUserType.getValue())) u = new SwimmingDuck(null, txtUsername.getText(), txtEmail.getText(), txtPassword.getText(), Double.parseDouble(txtSpeed.getText()), Double.parseDouble(txtEndurance.getText()));
+            else u = new Person(null, txtUsername.getText(), txtEmail.getText(), txtPassword.getText(), txtFirstName.getText(), txtLastName.getText(), LocalDate.parse(txtBirthDate.getText()), txtOccupation.getText(), Integer.parseInt(txtEmpathy.getText()));
+            service.addUser(u); lblStatus.setText("Succes!"); clearAddForm();
         } catch (Exception e) { lblStatus.setText("Eroare: " + e.getMessage()); }
     }
 
-    @FXML
-    private void handleDeleteUser() {
-        try { service.removeUserByEmail(txtDeleteEmail.getText()); refreshUserLists(); loadDucksPage(); } catch (Exception e) { lblStatus.setText(e.getMessage()); }
-    }
-
-    @FXML
-    private void handleRemoveFriend() {
-        FriendshipDTO sel = friendshipTable.getSelectionModel().getSelectedItem();
-        if (sel != null) {
-            try { service.removeFriendByEmails(sel.getUser1Email(), sel.getUser2Email()); refreshUserLists(); } catch (Exception e) { lblStatus.setText(e.getMessage()); }
-        }
-    }
-
+    @FXML private void handleDeleteUser() { try { service.removeUserByEmail(txtDeleteEmail.getText()); } catch (Exception e) { lblStatus.setText(e.getMessage()); } }
+    @FXML private void handleRemoveFriend() { FriendshipDTO sel = friendshipTable.getSelectionModel().getSelectedItem(); if (sel != null) service.removeFriendByEmails(sel.getUser1Email(), sel.getUser2Email()); }
     @FXML private void handleCalculateStats() { try { lblCommunityCount.setText(String.valueOf(service.numberOfCommunities())); } catch (Exception e) {} }
 
     private void clearAddForm() {

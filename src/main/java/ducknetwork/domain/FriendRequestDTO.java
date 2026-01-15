@@ -3,17 +3,25 @@ package ducknetwork.domain;
 import java.time.LocalDateTime;
 
 public class FriendRequestDTO {
-    private final String fromEmail;
-    private final String status;
-    private final LocalDateTime date;
+    private String fromEmail;
+    private FriendshipStatus status;
+    private LocalDateTime date;
 
-    public FriendRequestDTO(String fromEmail, String status, LocalDateTime date) {
+    public FriendRequestDTO(String fromEmail, FriendshipStatus status, LocalDateTime date) {
         this.fromEmail = fromEmail;
         this.status = status;
         this.date = date;
     }
 
-    public String getFromEmail() { return fromEmail; }
-    public String getStatus() { return status; }
-    public LocalDateTime getDate() { return date; }
+    public String getFromEmail() {
+        return fromEmail;
+    }
+
+    public FriendshipStatus getStatus() {
+        return status;
+    }
+
+    public LocalDateTime getDate() {
+        return date;
+    }
 }
