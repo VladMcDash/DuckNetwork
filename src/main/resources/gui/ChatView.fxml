@@ -11,6 +11,6 @@
 
     <HBox spacing="10" style="-fx-padding: 10;">
         <TextArea fx:id="inputMessage" prefHeight="50" HBox.hgrow="ALWAYS" promptText="Scrie un mesaj..." wrapText="true"/>
-        <Button text="Trimite" onAction="#handleSendMessage" prefHeight="50"/>
+        <Button text="▶" onAction="#handleSendMessage" prefHeight="50"/>
     </HBox>
 </VBox>
