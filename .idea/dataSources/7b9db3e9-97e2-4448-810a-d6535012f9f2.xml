@@ -4428,49 +4428,56 @@ false Zulu
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>duckuser</OwnerName>
     </table>
-    <table id="286" parent="274" name="friends">
+    <table id="286" parent="274" name="friend_requests">
+      <DetailsLevel>2</DetailsLevel>
+      <ObjectId>17079</ObjectId>
+      <StateNumber>1148</StateNumber>
+      <AccessMethodId>2</AccessMethodId>
+      <OwnerName>duckuser</OwnerName>
+    </table>
+    <table id="287" parent="274" name="friends">
       <DetailsLevel>2</DetailsLevel>
       <ObjectId>17002</ObjectId>
       <StateNumber>1054</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>duckuser</OwnerName>
     </table>
-    <table id="287" parent="274" name="message_recipients">
+    <table id="288" parent="274" name="message_recipients">
       <DetailsLevel>2</DetailsLevel>
       <ObjectId>17062</ObjectId>
       <StateNumber>1124</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>duckuser</OwnerName>
     </table>
-    <table id="288" parent="274" name="messages">
+    <table id="289" parent="274" name="messages">
       <DetailsLevel>2</DetailsLevel>
       <ObjectId>17040</ObjectId>
       <StateNumber>1123</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>duckuser</OwnerName>
     </table>
-    <table id="289" parent="274" name="person_details">
+    <table id="290" parent="274" name="person_details">
       <DetailsLevel>2</DetailsLevel>
       <ObjectId>16830</ObjectId>
       <StateNumber>922</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>duckuser</OwnerName>
     </table>
-    <table id="290" parent="274" name="race_buoys">
+    <table id="291" parent="274" name="race_buoys">
       <DetailsLevel>2</DetailsLevel>
       <ObjectId>16927</ObjectId>
       <StateNumber>936</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>duckuser</OwnerName>
     </table>
-    <table id="291" parent="274" name="users">
+    <table id="292" parent="274" name="users">
       <DetailsLevel>2</DetailsLevel>
       <ObjectId>16812</ObjectId>
       <StateNumber>922</StateNumber>
       <AccessMethodId>2</AccessMethodId>
       <OwnerName>duckuser</OwnerName>
     </table>
-    <column id="292" parent="281" name="id">
+    <column id="293" parent="281" name="id">
       <DefaultExpression>nextval(&apos;cards_id_seq&apos;::regclass)</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>1</Position>
@@ -4478,21 +4485,21 @@ false Zulu
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="293" parent="281" name="name">
+    <column id="294" parent="281" name="name">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>928</StateNumber>
       <StoredType>varchar(150)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="294" parent="281" name="created_at">
+    <column id="295" parent="281" name="created_at">
       <DefaultExpression>now()</DefaultExpression>
       <Position>3</Position>
       <StateNumber>928</StateNumber>
       <StoredType>timestamp with time zone|0s</StoredType>
       <TypeId>1184</TypeId>
     </column>
-    <index id="295" parent="281" name="cards_pkey">
+    <index id="296" parent="281" name="cards_pkey">
       <ColNames>id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16878</ObjectId>
@@ -4501,7 +4508,7 @@ false Zulu
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <index id="296" parent="281" name="idx_cards_name">
+    <index id="297" parent="281" name="idx_cards_name">
       <ColNames>name</ColNames>
       <ObjectId>16947</ObjectId>
       <StateNumber>944</StateNumber>
@@ -4510,28 +4517,28 @@ false Zulu
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <key id="297" parent="281" name="cards_pkey">
+    <key id="298" parent="281" name="cards_pkey">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16879</ObjectId>
       <Primary>1</Primary>
       <StateNumber>928</StateNumber>
       <UnderlyingIndexId>16878</UnderlyingIndexId>
     </key>
-    <column id="298" parent="282" name="duck_id">
+    <column id="299" parent="282" name="duck_id">
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StateNumber>1068</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="299" parent="282" name="card_id">
+    <column id="300" parent="282" name="card_id">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>1068</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <foreign-key id="300" parent="282" name="duck_card_memberships_duck_id_fkey">
+    <foreign-key id="301" parent="282" name="duck_card_memberships_duck_id_fkey">
       <ColNames>duck_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17029</ObjectId>
@@ -4540,7 +4547,7 @@ false Zulu
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16812</RefTableId>
     </foreign-key>
-    <foreign-key id="301" parent="282" name="duck_card_memberships_card_id_fkey">
+    <foreign-key id="302" parent="282" name="duck_card_memberships_card_id_fkey">
       <ColNames>card_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17034</ObjectId>
@@ -4549,7 +4556,7 @@ false Zulu
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16871</RefTableId>
     </foreign-key>
-    <index id="302" parent="282" name="duck_card_memberships_pkey">
+    <index id="303" parent="282" name="duck_card_memberships_pkey">
       <ColNames>duck_id
 card_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
@@ -4559,40 +4566,40 @@ card_id</ColNames>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="303" parent="282" name="duck_card_memberships_pkey">
+    <key id="304" parent="282" name="duck_card_memberships_pkey">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17028</ObjectId>
       <Primary>1</Primary>
       <StateNumber>1068</StateNumber>
       <UnderlyingIndexId>17027</UnderlyingIndexId>
     </key>
-    <column id="304" parent="283" name="user_id">
+    <column id="305" parent="283" name="user_id">
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StateNumber>924</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="305" parent="283" name="type">
+    <column id="306" parent="283" name="type">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>924</StateNumber>
       <StoredType>varchar(100)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="306" parent="283" name="speed">
+    <column id="307" parent="283" name="speed">
       <Position>3</Position>
       <StateNumber>924</StateNumber>
       <StoredType>double precision|0s</StoredType>
       <TypeId>701</TypeId>
     </column>
-    <column id="307" parent="283" name="endurance">
+    <column id="308" parent="283" name="endurance">
       <Position>4</Position>
       <StateNumber>924</StateNumber>
       <StoredType>double precision|0s</StoredType>
       <TypeId>701</TypeId>
     </column>
-    <foreign-key id="308" parent="283" name="duck_details_user_id_fkey">
+    <foreign-key id="309" parent="283" name="duck_details_user_id_fkey">
       <ColNames>user_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16848</ObjectId>
@@ -4601,7 +4608,7 @@ card_id</ColNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16812</RefTableId>
     </foreign-key>
-    <index id="309" parent="283" name="duck_details_pkey">
+    <index id="310" parent="283" name="duck_details_pkey">
       <ColNames>user_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16846</ObjectId>
@@ -4610,35 +4617,35 @@ card_id</ColNames>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="310" parent="283" name="duck_details_pkey">
+    <key id="311" parent="283" name="duck_details_pkey">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16847</ObjectId>
       <Primary>1</Primary>
       <StateNumber>924</StateNumber>
       <UnderlyingIndexId>16846</UnderlyingIndexId>
     </key>
-    <column id="311" parent="284" name="event_id">
+    <column id="312" parent="284" name="event_id">
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StateNumber>934</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="312" parent="284" name="user_id">
+    <column id="313" parent="284" name="user_id">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>934</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="313" parent="284" name="subscribed_at">
+    <column id="314" parent="284" name="subscribed_at">
       <DefaultExpression>now()</DefaultExpression>
       <Position>3</Position>
       <StateNumber>934</StateNumber>
       <StoredType>timestamp with time zone|0s</StoredType>
       <TypeId>1184</TypeId>
     </column>
-    <foreign-key id="314" parent="284" name="event_subscribers_event_id_fkey">
+    <foreign-key id="315" parent="284" name="event_subscribers_event_id_fkey">
       <ColNames>event_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16917</ObjectId>
@@ -4647,7 +4654,7 @@ card_id</ColNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16898</RefTableId>
     </foreign-key>
-    <foreign-key id="315" parent="284" name="event_subscribers_user_id_fkey">
+    <foreign-key id="316" parent="284" name="event_subscribers_user_id_fkey">
       <ColNames>user_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16922</ObjectId>
@@ -4656,7 +4663,7 @@ card_id</ColNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16812</RefTableId>
     </foreign-key>
-    <index id="316" parent="284" name="event_subscribers_pkey">
+    <index id="317" parent="284" name="event_subscribers_pkey">
       <ColNames>event_id
 user_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
@@ -4666,26 +4673,26 @@ user_id</ColNames>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <index id="317" parent="284" name="idx_event_subscribers_user">
+    <index id="318" parent="284" name="idx_event_subscribers_user">
       <ColNames>user_id</ColNames>
       <ObjectId>16946</ObjectId>
       <StateNumber>943</StateNumber>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="318" parent="284" name="event_subscribers_pkey">
+    <key id="319" parent="284" name="event_subscribers_pkey">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16916</ObjectId>
       <Primary>1</Primary>
       <StateNumber>934</StateNumber>
       <UnderlyingIndexId>16915</UnderlyingIndexId>
     </key>
-    <check id="319" parent="285" name="events_type_check">
+    <check id="320" parent="285" name="events_type_check">
       <ColNames>type</ColNames>
       <ObjectId>16903</ObjectId>
       <Predicate>(type)::text = ANY ((ARRAY[&apos;EVENT&apos;::character varying, &apos;RACE&apos;::character varying])::text[])</Predicate>
       <StateNumber>932</StateNumber>
     </check>
-    <column id="320" parent="285" name="id">
+    <column id="321" parent="285" name="id">
       <DefaultExpression>nextval(&apos;events_id_seq&apos;::regclass)</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>1</Position>
@@ -4693,28 +4700,28 @@ user_id</ColNames>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="321" parent="285" name="name">
+    <column id="322" parent="285" name="name">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>932</StateNumber>
       <StoredType>varchar(200)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="322" parent="285" name="type">
+    <column id="323" parent="285" name="type">
       <NotNull>1</NotNull>
       <Position>3</Position>
       <StateNumber>932</StateNumber>
       <StoredType>varchar(50)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="323" parent="285" name="created_at">
+    <column id="324" parent="285" name="created_at">
       <DefaultExpression>now()</DefaultExpression>
       <Position>4</Position>
       <StateNumber>932</StateNumber>
       <StoredType>timestamp with time zone|0s</StoredType>
       <TypeId>1184</TypeId>
     </column>
-    <index id="324" parent="285" name="events_pkey">
+    <index id="325" parent="285" name="events_pkey">
       <ColNames>id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16907</ObjectId>
@@ -4723,7 +4730,7 @@ user_id</ColNames>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <index id="325" parent="285" name="idx_events_name">
+    <index id="326" parent="285" name="idx_events_name">
       <ColNames>name</ColNames>
       <ObjectId>16948</ObjectId>
       <StateNumber>945</StateNumber>
@@ -4732,49 +4739,114 @@ user_id</ColNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <key id="326" parent="285" name="events_pkey">
+    <key id="327" parent="285" name="events_pkey">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16908</ObjectId>
       <Primary>1</Primary>
       <StateNumber>932</StateNumber>
       <UnderlyingIndexId>16907</UnderlyingIndexId>
     </key>
-    <check id="327" parent="286" name="user_id_less_than_friend">
+    <column id="328" parent="286" name="from_user_id">
+      <NotNull>1</NotNull>
+      <Position>1</Position>
+      <StateNumber>1148</StateNumber>
+      <StoredType>bigint|0s</StoredType>
+      <TypeId>20</TypeId>
+    </column>
+    <column id="329" parent="286" name="to_user_id">
+      <NotNull>1</NotNull>
+      <Position>2</Position>
+      <StateNumber>1148</StateNumber>
+      <StoredType>bigint|0s</StoredType>
+      <TypeId>20</TypeId>
+    </column>
+    <column id="330" parent="286" name="status">
+      <DefaultExpression>&apos;PENDING&apos;::character varying</DefaultExpression>
+      <NotNull>1</NotNull>
+      <Position>3</Position>
+      <StateNumber>1148</StateNumber>
+      <StoredType>varchar(20)|0s</StoredType>
+      <TypeId>1043</TypeId>
+    </column>
+    <column id="331" parent="286" name="date_sent">
+      <DefaultExpression>CURRENT_TIMESTAMP</DefaultExpression>
+      <NotNull>1</NotNull>
+      <Position>4</Position>
+      <StateNumber>1148</StateNumber>
+      <StoredType>timestamp|0s</StoredType>
+      <TypeId>1114</TypeId>
+    </column>
+    <foreign-key id="332" parent="286" name="friend_requests_from_user_id_fkey">
+      <ColNames>from_user_id</ColNames>
+      <NameSurrogate>1</NameSurrogate>
+      <ObjectId>17090</ObjectId>
+      <OnDelete>cascade</OnDelete>
+      <StateNumber>1148</StateNumber>
+      <RefKeyColPositions>1</RefKeyColPositions>
+      <RefTableId>16812</RefTableId>
+    </foreign-key>
+    <foreign-key id="333" parent="286" name="friend_requests_to_user_id_fkey">
+      <ColNames>to_user_id</ColNames>
+      <NameSurrogate>1</NameSurrogate>
+      <ObjectId>17095</ObjectId>
+      <OnDelete>cascade</OnDelete>
+      <StateNumber>1148</StateNumber>
+      <RefKeyColPositions>1</RefKeyColPositions>
+      <RefTableId>16812</RefTableId>
+    </foreign-key>
+    <index id="334" parent="286" name="friend_requests_pkey">
+      <ColNames>from_user_id
+to_user_id</ColNames>
+      <NameSurrogate>1</NameSurrogate>
+      <ObjectId>17088</ObjectId>
+      <Primary>1</Primary>
+      <StateNumber>1148</StateNumber>
+      <Unique>1</Unique>
+      <AccessMethodId>403</AccessMethodId>
+    </index>
+    <key id="335" parent="286" name="friend_requests_pkey">
+      <NameSurrogate>1</NameSurrogate>
+      <ObjectId>17089</ObjectId>
+      <Primary>1</Primary>
+      <StateNumber>1148</StateNumber>
+      <UnderlyingIndexId>17088</UnderlyingIndexId>
+    </key>
+    <check id="336" parent="287" name="user_id_less_than_friend">
       <ColNames>user_id
 friend_id</ColNames>
       <ObjectId>17021</ObjectId>
       <Predicate>user_id &lt; friend_id</Predicate>
       <StateNumber>1054</StateNumber>
     </check>
-    <check id="328" parent="286" name="no_self_friendship">
+    <check id="337" parent="287" name="no_self_friendship">
       <ColNames>user_id
 friend_id</ColNames>
       <ObjectId>17006</ObjectId>
       <Predicate>user_id &lt;&gt; friend_id</Predicate>
       <StateNumber>1052</StateNumber>
     </check>
-    <column id="329" parent="286" name="user_id">
+    <column id="338" parent="287" name="user_id">
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StateNumber>1052</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="330" parent="286" name="friend_id">
+    <column id="339" parent="287" name="friend_id">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>1052</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="331" parent="286" name="created_at">
+    <column id="340" parent="287" name="created_at">
       <DefaultExpression>now()</DefaultExpression>
       <Position>3</Position>
       <StateNumber>1052</StateNumber>
       <StoredType>timestamp with time zone|0s</StoredType>
       <TypeId>1184</TypeId>
     </column>
-    <foreign-key id="332" parent="286" name="friends_user_id_fkey">
+    <foreign-key id="341" parent="287" name="friends_user_id_fkey">
       <ColNames>user_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17011</ObjectId>
@@ -4783,7 +4855,7 @@ friend_id</ColNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16812</RefTableId>
     </foreign-key>
-    <foreign-key id="333" parent="286" name="friends_friend_id_fkey">
+    <foreign-key id="342" parent="287" name="friends_friend_id_fkey">
       <ColNames>friend_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17016</ObjectId>
@@ -4792,7 +4864,7 @@ friend_id</ColNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16812</RefTableId>
     </foreign-key>
-    <index id="334" parent="286" name="friends_pkey">
+    <index id="343" parent="287" name="friends_pkey">
       <ColNames>user_id
 friend_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
@@ -4802,28 +4874,28 @@ friend_id</ColNames>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="335" parent="286" name="friends_pkey">
+    <key id="344" parent="287" name="friends_pkey">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17010</ObjectId>
       <Primary>1</Primary>
       <StateNumber>1052</StateNumber>
       <UnderlyingIndexId>17009</UnderlyingIndexId>
     </key>
-    <column id="336" parent="287" name="message_id">
+    <column id="345" parent="288" name="message_id">
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StateNumber>1124</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="337" parent="287" name="to_user_id">
+    <column id="346" parent="288" name="to_user_id">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>1124</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <foreign-key id="338" parent="287" name="message_recipients_message_id_fkey">
+    <foreign-key id="347" parent="288" name="message_recipients_message_id_fkey">
       <ColNames>message_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17069</ObjectId>
@@ -4832,7 +4904,7 @@ friend_id</ColNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>17040</RefTableId>
     </foreign-key>
-    <foreign-key id="339" parent="287" name="message_recipients_to_user_id_fkey">
+    <foreign-key id="348" parent="288" name="message_recipients_to_user_id_fkey">
       <ColNames>to_user_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17074</ObjectId>
@@ -4841,7 +4913,7 @@ friend_id</ColNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16812</RefTableId>
     </foreign-key>
-    <index id="340" parent="287" name="message_recipients_pkey">
+    <index id="349" parent="288" name="message_recipients_pkey">
       <ColNames>message_id
 to_user_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
@@ -4851,14 +4923,14 @@ to_user_id</ColNames>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="341" parent="287" name="message_recipients_pkey">
+    <key id="350" parent="288" name="message_recipients_pkey">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17068</ObjectId>
       <Primary>1</Primary>
       <StateNumber>1124</StateNumber>
       <UnderlyingIndexId>17067</UnderlyingIndexId>
     </key>
-    <column id="342" parent="288" name="id">
+    <column id="351" parent="289" name="id">
       <DefaultExpression>nextval(&apos;messages_id_seq&apos;::regclass)</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>1</Position>
@@ -4867,34 +4939,34 @@ to_user_id</ColNames>
       <SequenceId>17039</SequenceId>
       <TypeId>23</TypeId>
     </column>
-    <column id="343" parent="288" name="from_user_id">
+    <column id="352" parent="289" name="from_user_id">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>1123</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="344" parent="288" name="message_text">
+    <column id="353" parent="289" name="message_text">
       <NotNull>1</NotNull>
       <Position>3</Position>
       <StateNumber>1123</StateNumber>
       <StoredType>text|0s</StoredType>
       <TypeId>25</TypeId>
     </column>
-    <column id="345" parent="288" name="date_sent">
+    <column id="354" parent="289" name="date_sent">
       <NotNull>1</NotNull>
       <Position>4</Position>
       <StateNumber>1123</StateNumber>
       <StoredType>timestamp|0s</StoredType>
       <TypeId>1114</TypeId>
     </column>
-    <column id="346" parent="288" name="reply_id">
+    <column id="355" parent="289" name="reply_id">
       <Position>5</Position>
       <StateNumber>1123</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <foreign-key id="347" parent="288" name="messages_from_user_id_fkey">
+    <foreign-key id="356" parent="289" name="messages_from_user_id_fkey">
       <ColNames>from_user_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17052</ObjectId>
@@ -4903,7 +4975,7 @@ to_user_id</ColNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16812</RefTableId>
     </foreign-key>
-    <foreign-key id="348" parent="288" name="messages_reply_id_fkey">
+    <foreign-key id="357" parent="289" name="messages_reply_id_fkey">
       <ColNames>reply_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17057</ObjectId>
@@ -4912,7 +4984,7 @@ to_user_id</ColNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>17040</RefTableId>
     </foreign-key>
-    <index id="349" parent="288" name="messages_pkey">
+    <index id="358" parent="289" name="messages_pkey">
       <ColNames>id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17050</ObjectId>
@@ -4921,51 +4993,51 @@ to_user_id</ColNames>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="350" parent="288" name="messages_pkey">
+    <key id="359" parent="289" name="messages_pkey">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>17051</ObjectId>
       <Primary>1</Primary>
       <StateNumber>1123</StateNumber>
       <UnderlyingIndexId>17050</UnderlyingIndexId>
     </key>
-    <column id="351" parent="289" name="user_id">
+    <column id="360" parent="290" name="user_id">
       <NotNull>1</NotNull>
       <Position>1</Position>
       <StateNumber>922</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="352" parent="289" name="first_name">
+    <column id="361" parent="290" name="first_name">
       <Position>2</Position>
       <StateNumber>922</StateNumber>
       <StoredType>varchar(100)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="353" parent="289" name="last_name">
+    <column id="362" parent="290" name="last_name">
       <Position>3</Position>
       <StateNumber>922</StateNumber>
       <StoredType>varchar(100)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="354" parent="289" name="birth_date">
+    <column id="363" parent="290" name="birth_date">
       <Position>4</Position>
       <StateNumber>922</StateNumber>
       <StoredType>date|0s</StoredType>
       <TypeId>1082</TypeId>
     </column>
-    <column id="355" parent="289" name="occupation">
+    <column id="364" parent="290" name="occupation">
       <Position>5</Position>
       <StateNumber>922</StateNumber>
       <StoredType>varchar(150)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="356" parent="289" name="empathy">
+    <column id="365" parent="290" name="empathy">
       <Position>6</Position>
       <StateNumber>922</StateNumber>
       <StoredType>integer|0s</StoredType>
       <TypeId>23</TypeId>
     </column>
-    <foreign-key id="357" parent="289" name="person_details_user_id_fkey">
+    <foreign-key id="366" parent="290" name="person_details_user_id_fkey">
       <ColNames>user_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16836</ObjectId>
@@ -4974,7 +5046,7 @@ to_user_id</ColNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16812</RefTableId>
     </foreign-key>
-    <index id="358" parent="289" name="person_details_pkey">
+    <index id="367" parent="290" name="person_details_pkey">
       <ColNames>user_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16834</ObjectId>
@@ -4983,14 +5055,14 @@ to_user_id</ColNames>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="359" parent="289" name="person_details_pkey">
+    <key id="368" parent="290" name="person_details_pkey">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16835</ObjectId>
       <Primary>1</Primary>
       <StateNumber>922</StateNumber>
       <UnderlyingIndexId>16834</UnderlyingIndexId>
     </key>
-    <column id="360" parent="290" name="id">
+    <column id="369" parent="291" name="id">
       <DefaultExpression>nextval(&apos;race_buoys_id_seq&apos;::regclass)</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>1</Position>
@@ -4998,27 +5070,27 @@ to_user_id</ColNames>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="361" parent="290" name="race_event_id">
+    <column id="370" parent="291" name="race_event_id">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>936</StateNumber>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="362" parent="290" name="distance">
+    <column id="371" parent="291" name="distance">
       <NotNull>1</NotNull>
       <Position>3</Position>
       <StateNumber>936</StateNumber>
       <StoredType>double precision|0s</StoredType>
       <TypeId>701</TypeId>
     </column>
-    <column id="363" parent="290" name="position">
+    <column id="372" parent="291" name="position">
       <Position>4</Position>
       <StateNumber>936</StateNumber>
       <StoredType>integer|0s</StoredType>
       <TypeId>23</TypeId>
     </column>
-    <foreign-key id="364" parent="290" name="race_buoys_race_event_id_fkey">
+    <foreign-key id="373" parent="291" name="race_buoys_race_event_id_fkey">
       <ColNames>race_event_id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16936</ObjectId>
@@ -5027,7 +5099,7 @@ to_user_id</ColNames>
       <RefKeyColPositions>1</RefKeyColPositions>
       <RefTableId>16898</RefTableId>
     </foreign-key>
-    <index id="365" parent="290" name="race_buoys_pkey">
+    <index id="374" parent="291" name="race_buoys_pkey">
       <ColNames>id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16934</ObjectId>
@@ -5036,20 +5108,20 @@ to_user_id</ColNames>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <key id="366" parent="290" name="race_buoys_pkey">
+    <key id="375" parent="291" name="race_buoys_pkey">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16935</ObjectId>
       <Primary>1</Primary>
       <StateNumber>936</StateNumber>
       <UnderlyingIndexId>16934</UnderlyingIndexId>
     </key>
-    <check id="367" parent="291" name="users_type_check">
+    <check id="376" parent="292" name="users_type_check">
       <ColNames>type</ColNames>
       <ObjectId>16817</ObjectId>
       <Predicate>(type)::text = ANY ((ARRAY[&apos;PERSON&apos;::character varying, &apos;DUCK&apos;::character varying])::text[])</Predicate>
       <StateNumber>919</StateNumber>
     </check>
-    <column id="368" parent="291" name="id">
+    <column id="377" parent="292" name="id">
       <DefaultExpression>nextval(&apos;user_id_seq&apos;::regclass)</DefaultExpression>
       <NotNull>1</NotNull>
       <Position>1</Position>
@@ -5057,41 +5129,41 @@ to_user_id</ColNames>
       <StoredType>bigint|0s</StoredType>
       <TypeId>20</TypeId>
     </column>
-    <column id="369" parent="291" name="username">
+    <column id="378" parent="292" name="username">
       <NotNull>1</NotNull>
       <Position>2</Position>
       <StateNumber>919</StateNumber>
       <StoredType>varchar(100)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="370" parent="291" name="email">
+    <column id="379" parent="292" name="email">
       <NotNull>1</NotNull>
       <Position>3</Position>
       <StateNumber>919</StateNumber>
       <StoredType>varchar(200)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="371" parent="291" name="password">
+    <column id="380" parent="292" name="password">
       <Position>4</Position>
       <StateNumber>919</StateNumber>
       <StoredType>varchar(200)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="372" parent="291" name="type">
+    <column id="381" parent="292" name="type">
       <NotNull>1</NotNull>
       <Position>5</Position>
       <StateNumber>919</StateNumber>
       <StoredType>varchar(50)|0s</StoredType>
       <TypeId>1043</TypeId>
     </column>
-    <column id="373" parent="291" name="created_at">
+    <column id="382" parent="292" name="created_at">
       <DefaultExpression>now()</DefaultExpression>
       <Position>6</Position>
       <StateNumber>919</StateNumber>
       <StoredType>timestamp with time zone|0s</StoredType>
       <TypeId>1184</TypeId>
     </column>
-    <index id="374" parent="291" name="users_pkey">
+    <index id="383" parent="292" name="users_pkey">
       <ColNames>id</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16824</ObjectId>
@@ -5100,7 +5172,7 @@ to_user_id</ColNames>
       <Unique>1</Unique>
       <AccessMethodId>403</AccessMethodId>
     </index>
-    <index id="375" parent="291" name="users_username_key">
+    <index id="384" parent="292" name="users_username_key">
       <ColNames>username</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16826</ObjectId>
@@ -5111,7 +5183,7 @@ to_user_id</ColNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="376" parent="291" name="users_email_key">
+    <index id="385" parent="292" name="users_email_key">
       <ColNames>email</ColNames>
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16828</ObjectId>
@@ -5122,7 +5194,7 @@ to_user_id</ColNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="377" parent="291" name="idx_users_username">
+    <index id="386" parent="292" name="idx_users_username">
       <ColNames>username</ColNames>
       <ObjectId>16941</ObjectId>
       <StateNumber>938</StateNumber>
@@ -5131,7 +5203,7 @@ to_user_id</ColNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <index id="378" parent="291" name="idx_users_email">
+    <index id="387" parent="292" name="idx_users_email">
       <ColNames>email</ColNames>
       <ObjectId>16942</ObjectId>
       <StateNumber>939</StateNumber>
@@ -5140,20 +5212,20 @@ to_user_id</ColNames>
       <CollationIds>100</CollationIds>
       <CollationParentNames>pg_catalog</CollationParentNames>
     </index>
-    <key id="379" parent="291" name="users_pkey">
+    <key id="388" parent="292" name="users_pkey">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16825</ObjectId>
       <Primary>1</Primary>
       <StateNumber>919</StateNumber>
       <UnderlyingIndexId>16824</UnderlyingIndexId>
     </key>
-    <key id="380" parent="291" name="users_username_key">
+    <key id="389" parent="292" name="users_username_key">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16827</ObjectId>
       <StateNumber>919</StateNumber>
       <UnderlyingIndexId>16826</UnderlyingIndexId>
     </key>
-    <key id="381" parent="291" name="users_email_key">
+    <key id="390" parent="292" name="users_email_key">
       <NameSurrogate>1</NameSurrogate>
       <ObjectId>16829</ObjectId>
       <StateNumber>919</StateNumber>

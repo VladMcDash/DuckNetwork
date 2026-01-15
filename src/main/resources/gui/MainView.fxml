@@ -15,6 +15,8 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.layout.GridPane?>
 
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.PasswordField?>
 <AnchorPane prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ducknetwork.gui.DuckController">
     <children>
         <TabPane tabClosingPolicy="UNAVAILABLE" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
@@ -59,7 +61,7 @@
                                     <Label style="-fx-font-weight: bold;" text="Adaugare Utilizator Nou" />
                                     <TextField fx:id="txtUsername" promptText="Username" />
                                     <TextField fx:id="txtEmail" promptText="Email" />
-                                    <TextField fx:id="txtPassword" promptText="Parola" />
+                                    <PasswordField fx:id="txtPassword" promptText="Parola" />
                                     <ComboBox fx:id="comboUserType" prefWidth="150.0" promptText="Selecteaza Tip" />
                                     <VBox fx:id="personFieldsContainer" spacing="5.0" visible="false" managed="false">
                                         <TextField fx:id="txtFirstName" promptText="Prenume" />
@@ -123,6 +125,42 @@
                             </children>
                         </VBox>
                     </content>
+                </Tab>
+                <Tab text="Friend Requests">
+                    <content>
+                        <VBox spacing="10.0" style="-fx-padding: 20;">
+                            <Label fx:id="lblNotificari" text="Notificari" style="-fx-font-weight: bold; -fx-font-size: 16px;" />
+                            <ListView fx:id="listNotifications" VBox.vgrow="ALWAYS" />
+                            <HBox spacing="10" alignment="CENTER">
+                                <Button text="Accepta" onAction="#handleAcceptRequest" style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
+                                <Button text="Respinge" onAction="#handleRejectRequest" style="-fx-background-color: #F44336; -fx-text-fill: white;"/>
+                                <Button text="Refresh" onAction="#refreshNotifications" />
+                            </HBox>
+                        </VBox>
+                    </content>
+                </Tab>
+                <Tab text="Chats">
+                    <VBox spacing="10" style="-fx-padding: 20;">
+                        <Label text="Incepe o conversație noua:" style="-fx-font-weight: bold;" />
+                        <HBox spacing="10" alignment="CENTER_LEFT">
+                            <TextField fx:id="txtSearchChatEmail" promptText="Search email" HBox.hgrow="ALWAYS" />
+                            <Button text="🔎" onAction="#handleSearchAndChat" style="-fx-background-color: #2196F3; -fx-text-fill: white;" />
+
+                            <Button fx:id="btnQuickFriendRequest" text="Trimite Cerere" onAction="#handleQuickRequest"
+                                    visible="false" managed="false" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" />
+                            <Label fx:id="lblFriendStatus" text="✓ Prieteni"
+                                   visible="false" managed="false" style="-fx-text-fill: #4CAF50; -fx-font-weight: bold;" />
+                        </HBox>
+
+                        <Separator />
+
+                        <Label text="Chat-uri recente:" />
+                        <ListView fx:id="listRecentChats" VBox.vgrow="ALWAYS" />
+
+                        <Label fx:id="lblChatStatus" text="" wrapText="true" style="-fx-text-fill: #555; -fx-font-style: italic;" />
+
+                        <Button text="Deschide Chat" onAction="#handleOpenRecentChat" maxWidth="Infinity" />
+                    </VBox>
                 </Tab>
             </tabs>
         </TabPane>
